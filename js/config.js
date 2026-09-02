@@ -1,6 +1,6 @@
 window.APP_CONFIG = Object.freeze({
 
-  APP_NAME: 'Warehouse App',
+  APP_NAME: 'StockFlow',
 
   API_BASE_URL:
     'https://n8n-v2.humalab.my.id/webhook',

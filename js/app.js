@@ -630,19 +630,19 @@ function navigateTo(page) {
   if (page === "search") {
     searchPage.classList.remove("hidden");
 
-    setHeader("Warehouse", "Cari Barang");
+    setHeader("StockFlow", "Cari Barang");
   }
 
   if (page === "movement") {
     movementPage?.classList.remove("hidden");
 
-    setHeader("Warehouse", "Movement");
+    setHeader("StockFlow", "Movement");
   }
 
   if (page === "history") {
     historyPage?.classList.remove("hidden");
 
-    setHeader("Warehouse", "Riwayat");
+    setHeader("StockFlow", "Riwayat");
   }
 
   updateNavigation();
