@@ -2,7 +2,6 @@
 <html lang="id">
 
 <head>
-
   <meta charset="UTF-8">
 
   <meta
@@ -10,197 +9,328 @@
     content="width=device-width, initial-scale=1, viewport-fit=cover"
   >
 
-  <title>
-    Warehouse Scanner
-  </title>
-
+  <title>Warehouse App</title>
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-
-  <!-- Barcode Scanner -->
-  <script
-    src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"
-  ></script>
-
-
   <!-- Lucide -->
-  <script
-    src="https://unpkg.com/lucide@latest"
-  ></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 
-
-  <style>
-
-    html,
-    body {
-
-      min-height: 100%;
-
-      background: #020617;
-
-    }
-
-
-    body {
-
-      margin: 0;
-
-      -webkit-tap-highlight-color:
-        transparent;
-
-      overscroll-behavior:
-        none;
-
-    }
-
-
-    #reader {
-
-      width: 100%;
-
-      overflow: hidden;
-
-      border-radius: 24px;
-
-      background: #000;
-
-    }
-
-
-    #reader video {
-
-      width: 100% !important;
-
-      height: 100% !important;
-
-      object-fit: cover !important;
-
-      border-radius: 24px;
-
-    }
-
-
-    #reader__scan_region {
-
-      background:
-        transparent !important;
-
-    }
-
-
-    #reader__dashboard {
-
-      display:
-        none !important;
-
-    }
-
-
-    #reader img {
-
-      display:
-        none !important;
-
-    }
-
-
-    .scan-line {
-
-      animation:
-        scanning
-        2s
-        ease-in-out
-        infinite;
-
-    }
-
-
-    @keyframes scanning {
-
-      0% {
-
-        top: 25%;
-
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#fff1f2',
+              100: '#ffe4e6',
+              500: '#ef4444',
+              600: '#dc2626',
+              700: '#b91c1c'
+            }
+          }
+        }
       }
+    };
+  </script>
 
-      50% {
-
-        top: 70%;
-
-      }
-
-      100% {
-
-        top: 25%;
-
-      }
-
-    }
-
-
-    .safe-bottom {
-
-      padding-bottom:
-        max(
-          20px,
-          env(
-            safe-area-inset-bottom
-          )
-        );
-
-    }
-
-  </style>
-
+  <link
+    rel="stylesheet"
+    href="./css/app.css"
+  >
 </head>
 
 
-<body
+<body class="bg-slate-50 text-slate-900 antialiased">
+
+
+<!-- =========================================
+     BOOT
+========================================= -->
+
+<section
+  id="bootPage"
   class="
-    text-white
+    fixed
+    inset-0
+    z-[200]
+    flex
+    items-center
+    justify-center
+    bg-slate-50
   "
 >
 
+  <div class="text-center">
 
-<main
+    <div
+      class="
+        mx-auto
+        flex
+        h-16
+        w-16
+        items-center
+        justify-center
+        rounded-3xl
+        bg-red-600
+        text-white
+        shadow-lg
+        shadow-red-200
+      "
+    >
+      <i
+        data-lucide="package-search"
+        class="h-8 w-8"
+      ></i>
+    </div>
+
+    <div
+      class="
+        mx-auto
+        mt-6
+        h-6
+        w-6
+        animate-spin
+        rounded-full
+        border-2
+        border-slate-200
+        border-t-red-600
+      "
+    ></div>
+
+    <p class="mt-4 text-sm font-semibold text-slate-500">
+      Menyiapkan aplikasi...
+    </p>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================
+     LOGIN
+========================================= -->
+
+<section
+  id="loginPage"
   class="
+    hidden
     min-h-screen
-    flex
-    flex-col
-    bg-slate-950
+    items-center
+    justify-center
+    p-5
   "
+>
+
+  <div class="w-full max-w-sm">
+
+    <!-- BRAND -->
+
+    <div class="mb-8 text-center">
+
+      <div
+        class="
+          mx-auto
+          mb-4
+          flex
+          h-16
+          w-16
+          items-center
+          justify-center
+          rounded-3xl
+          bg-red-600
+          text-white
+          shadow-lg
+          shadow-red-200
+        "
+      >
+        <i
+          data-lucide="package-search"
+          class="h-8 w-8"
+        ></i>
+      </div>
+
+
+      <h1 class="text-2xl font-black">
+        Warehouse App
+      </h1>
+
+
+      <p class="mt-2 text-sm text-slate-500">
+        Masukkan NIK untuk melanjutkan
+      </p>
+
+    </div>
+
+
+    <!-- FORM -->
+
+    <form
+      id="loginForm"
+      class="
+        rounded-3xl
+        bg-white
+        p-6
+        shadow-sm
+        ring-1
+        ring-slate-200
+      "
+    >
+
+      <label
+        for="nikInput"
+        class="
+          mb-2
+          block
+          text-sm
+          font-semibold
+        "
+      >
+        NIK
+      </label>
+
+
+      <div class="relative">
+
+        <i
+          data-lucide="badge-user"
+          class="
+            absolute
+            left-4
+            top-1/2
+            h-5
+            w-5
+            -translate-y-1/2
+            text-slate-400
+          "
+        ></i>
+
+        <input
+          id="nikInput"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="Masukkan NIK"
+          class="
+            h-14
+            w-full
+            rounded-2xl
+            border
+            border-slate-200
+            bg-slate-50
+            pl-12
+            pr-4
+            text-lg
+            font-bold
+            outline-none
+            transition
+            focus:border-red-500
+            focus:bg-white
+            focus:ring-4
+            focus:ring-red-100
+          "
+        >
+
+      </div>
+
+
+      <div
+        id="loginError"
+        class="
+          mt-3
+          hidden
+          rounded-xl
+          bg-red-50
+          px-4
+          py-3
+          text-sm
+          font-medium
+          text-red-700
+        "
+      ></div>
+
+
+      <button
+        id="loginButton"
+        type="submit"
+        class="
+          mt-5
+          flex
+          h-14
+          w-full
+          items-center
+          justify-center
+          gap-2
+          rounded-2xl
+          bg-red-600
+          font-bold
+          text-white
+          shadow-sm
+          transition
+          active:scale-[.98]
+          hover:bg-red-700
+          disabled:cursor-not-allowed
+          disabled:opacity-60
+        "
+      >
+
+        <span>
+          Masuk
+        </span>
+
+        <i
+          data-lucide="arrow-right"
+          class="h-5 w-5"
+        ></i>
+
+      </button>
+
+    </form>
+
+  </div>
+
+</section>
+
+
+<!-- =========================================
+     APPLICATION
+========================================= -->
+
+<div
+  id="appPage"
+  class="hidden min-h-screen lg:flex"
 >
 
 
   <!-- =====================================
-       HEADER
+       DESKTOP SIDEBAR
   ====================================== -->
 
-  <header
+  <aside
     class="
-      flex
-      h-16
+      hidden
+      w-64
       shrink-0
-      items-center
-      justify-between
-      border-b
-      border-white/10
-      bg-slate-950
-      px-4
+      border-r
+      border-slate-200
+      bg-white
+      lg:flex
+      lg:flex-col
     "
   >
-
 
     <div
       class="
         flex
+        h-20
         items-center
         gap-3
+        border-b
+        border-slate-100
+        px-6
       "
     >
-
 
       <div
         class="
@@ -211,512 +341,576 @@
           justify-center
           rounded-xl
           bg-red-600
+          text-white
         "
       >
-
         <i
-          data-lucide="scan-barcode"
+          data-lucide="package-search"
           class="h-5 w-5"
         ></i>
-
       </div>
 
 
       <div>
 
-        <h1
-          class="font-bold"
-        >
-          Scan SKU
-        </h1>
+        <div class="font-black">
+          Warehouse
+        </div>
 
-
-        <p
-          class="
-            text-xs
-            text-slate-400
-          "
-        >
-          Warehouse Scanner
-        </p>
+        <div class="text-xs text-slate-400">
+          Inventory App
+        </div>
 
       </div>
 
     </div>
 
 
+    <nav class="flex-1 space-y-2 p-4">
 
-    <div
-      class="
-        flex
-        items-center
-        gap-2
-        rounded-full
-        bg-slate-800
-        px-3
-        py-1.5
-        text-xs
-        font-semibold
-        text-slate-300
-      "
-    >
-
-      <span
-        id="statusDot"
-        class="
-          h-2
-          w-2
-          rounded-full
-          bg-amber-400
-        "
-      ></span>
-
-
-      <span
-        id="statusText"
+      <button
+        class="desktop-nav desktop-nav-active"
       >
-        Menyiapkan
-      </span>
+        <i data-lucide="house"></i>
+        Dashboard
+      </button>
+
+
+      <button
+        class="desktop-nav desktop-nav-disabled"
+        disabled
+      >
+        <i data-lucide="search"></i>
+        Cari Barang
+      </button>
+
+
+      <button
+        class="desktop-nav desktop-nav-disabled"
+        disabled
+      >
+        <i data-lucide="package-plus"></i>
+        Barang Masuk
+      </button>
+
+
+      <button
+        class="desktop-nav desktop-nav-disabled"
+        disabled
+      >
+        <i data-lucide="package-minus"></i>
+        Barang Keluar
+      </button>
+
+
+      <button
+        class="desktop-nav desktop-nav-disabled"
+        disabled
+      >
+        <i data-lucide="move-right"></i>
+        Pindah Barang
+      </button>
+
+
+      <button
+        class="desktop-nav desktop-nav-disabled"
+        disabled
+      >
+        <i data-lucide="history"></i>
+        Riwayat
+      </button>
+
+    </nav>
+
+
+    <div class="border-t border-slate-100 p-4">
+
+      <button
+        id="desktopLogoutButton"
+        class="
+          flex
+          h-11
+          w-full
+          items-center
+          gap-3
+          rounded-xl
+          px-3
+          text-sm
+          font-semibold
+          text-slate-500
+          transition
+          hover:bg-slate-100
+        "
+      >
+        <i
+          data-lucide="log-out"
+          class="h-5 w-5"
+        ></i>
+
+        Keluar
+      </button>
 
     </div>
 
-  </header>
-
+  </aside>
 
 
   <!-- =====================================
-       CAMERA
+       MAIN
   ====================================== -->
 
-  <section
+  <main
     class="
-      flex
+      min-w-0
       flex-1
-      flex-col
-      px-4
-      pt-4
+      pb-24
+      lg:pb-0
     "
   >
 
 
-    <div
+    <!-- HEADER -->
+
+    <header
       class="
-        relative
-        mx-auto
-        w-full
-        max-w-lg
+        sticky
+        top-0
+        z-30
+        border-b
+        border-slate-200
+        bg-white/95
+        backdrop-blur
       "
     >
 
-
       <div
-        id="reader"
         class="
-          aspect-[3/4]
-          shadow-2xl
+          mx-auto
+          flex
+          h-16
+          max-w-5xl
+          items-center
+          justify-between
+          px-4
+          lg:h-20
+          lg:px-8
         "
-      ></div>
+      >
+
+        <div>
+
+          <p
+            class="
+              text-xs
+              font-medium
+              text-slate-400
+            "
+          >
+            Selamat bekerja
+          </p>
+
+          <h2
+            id="headerUserName"
+            class="font-black"
+          >
+            PIC
+          </h2>
+
+        </div>
 
 
+        <button
+          id="mobileLogoutButton"
+          type="button"
+          class="
+            flex
+            h-10
+            w-10
+            items-center
+            justify-center
+            rounded-xl
+            bg-slate-100
+            text-slate-500
+            active:scale-95
+            lg:hidden
+          "
+        >
+          <i
+            data-lucide="log-out"
+            class="h-5 w-5"
+          ></i>
+        </button>
 
-      <!-- CAMERA OVERLAY -->
+      </div>
+
+    </header>
+
+
+    <!-- DASHBOARD -->
+
+    <section
+      class="
+        mx-auto
+        max-w-5xl
+        px-4
+        py-5
+        lg:px-8
+        lg:py-8
+      "
+    >
+
+      <!-- USER CARD -->
 
       <div
-        id="scannerOverlay"
         class="
-          pointer-events-none
-          absolute
-          inset-0
-          z-20
           overflow-hidden
           rounded-3xl
+          bg-slate-900
+          p-5
+          text-white
+          shadow-sm
+          lg:p-7
         "
       >
 
-
         <div
           class="
-            absolute
-            inset-x-0
-            top-0
-            h-[29%]
-            bg-black/30
-          "
-        ></div>
-
-
-        <div
-          class="
-            absolute
-            inset-x-0
-            bottom-0
-            h-[29%]
-            bg-black/30
-          "
-        ></div>
-
-
-        <div
-          class="
-            absolute
-            bottom-[29%]
-            left-0
-            top-[29%]
-            w-[8%]
-            bg-black/30
-          "
-        ></div>
-
-
-        <div
-          class="
-            absolute
-            bottom-[29%]
-            right-0
-            top-[29%]
-            w-[8%]
-            bg-black/30
-          "
-        ></div>
-
-
-
-        <!-- TARGET -->
-
-        <div
-          class="
-            absolute
-            left-[8%]
-            right-[8%]
-            top-[29%]
-            h-[42%]
-            rounded-2xl
-            border-2
-            border-white/80
+            flex
+            items-start
+            justify-between
+            gap-4
           "
         >
 
+          <div>
 
-          <div
-            class="
-              absolute
-              -left-0.5
-              -top-0.5
-              h-10
-              w-10
-              rounded-tl-2xl
-              border-l-4
-              border-t-4
-              border-red-500
-            "
-          ></div>
+            <p
+              class="
+                text-sm
+                font-medium
+                text-slate-400
+              "
+            >
+              Login sebagai
+            </p>
 
 
-          <div
-            class="
-              absolute
-              -right-0.5
-              -top-0.5
-              h-10
-              w-10
-              rounded-tr-2xl
-              border-r-4
-              border-t-4
-              border-red-500
-            "
-          ></div>
+            <h1
+              id="dashboardUserName"
+              class="
+                mt-1
+                text-2xl
+                font-black
+                lg:text-3xl
+              "
+            >
+              -
+            </h1>
 
-
-          <div
-            class="
-              absolute
-              -bottom-0.5
-              -left-0.5
-              h-10
-              w-10
-              rounded-bl-2xl
-              border-b-4
-              border-l-4
-              border-red-500
-            "
-          ></div>
-
-
-          <div
-            class="
-              absolute
-              -bottom-0.5
-              -right-0.5
-              h-10
-              w-10
-              rounded-br-2xl
-              border-b-4
-              border-r-4
-              border-red-500
-            "
-          ></div>
-
-
-          <div
-            class="
-              scan-line
-              absolute
-              left-4
-              right-4
-              h-0.5
-              bg-red-500
-              shadow-[0_0_12px_rgba(239,68,68,.9)]
-            "
-          ></div>
-
-        </div>
-
-      </div>
-
-
-
-      <!-- =====================================
-           START
-      ====================================== -->
-
-      <div
-        id="startOverlay"
-        class="
-          absolute
-          inset-0
-          z-30
-          flex
-          items-center
-          justify-center
-          rounded-3xl
-          bg-slate-950
-        "
-      >
-
-
-        <div
-          class="
-            max-w-xs
-            px-6
-            text-center
-          "
-        >
-
-
-          <div
-            class="
-              mx-auto
-              mb-5
-              flex
-              h-16
-              w-16
-              items-center
-              justify-center
-              rounded-3xl
-              bg-red-600
-              text-white
-            "
-          >
-
-            <i
-              data-lucide="camera"
-              class="h-8 w-8"
-            ></i>
-
-          </div>
-
-
-          <h2
-            class="
-              text-xl
-              font-bold
-            "
-          >
-            Kamera Scanner
-          </h2>
-
-
-          <p
-            class="
-              mt-2
-              text-sm
-              leading-6
-              text-slate-400
-            "
-          >
-            Arahkan barcode produk
-            ke area scanner.
-          </p>
-
-
-          <button
-            id="startButton"
-            type="button"
-            class="
-              mt-6
-              flex
-              h-14
-              w-full
-              items-center
-              justify-center
-              gap-2
-              rounded-2xl
-              bg-red-600
-              px-6
-              font-bold
-              text-white
-              transition
-              active:scale-[.98]
-            "
-          >
-
-            <i
-              data-lucide="scan-barcode"
-              class="h-5 w-5"
-            ></i>
-
-            Mulai Scanner
-
-          </button>
-
-
-          <button
-            id="backButton"
-            type="button"
-            class="
-              mt-3
-              flex
-              h-12
-              w-full
-              items-center
-              justify-center
-              gap-2
-              rounded-2xl
-              bg-slate-800
-              px-6
-              text-sm
-              font-semibold
-              text-slate-300
-              active:scale-[.98]
-            "
-          >
-
-            <i
-              data-lucide="arrow-left"
-              class="h-4 w-4"
-            ></i>
-
-            Kembali
-
-          </button>
-
-        </div>
-
-      </div>
-
-
-
-      <!-- =====================================
-           SUCCESS
-      ====================================== -->
-
-      <div
-        id="successOverlay"
-        class="
-          absolute
-          inset-0
-          z-40
-          hidden
-          items-center
-          justify-center
-          rounded-3xl
-          bg-slate-950/95
-          p-6
-        "
-      >
-
-
-        <div
-          class="
-            text-center
-          "
-        >
-
-
-          <div
-            class="
-              mx-auto
-              mb-5
-              flex
-              h-20
-              w-20
-              items-center
-              justify-center
-              rounded-full
-              bg-emerald-500
-              text-white
-            "
-          >
-
-            <i
-              data-lucide="check"
-              class="h-10 w-10"
-            ></i>
-
-          </div>
-
-
-          <p
-            class="
-              text-sm
-              font-semibold
-              text-emerald-400
-            "
-          >
-            SKU TERBACA
-          </p>
-
-
-          <h2
-            id="scanResult"
-            class="
-              mt-2
-              break-all
-              text-3xl
-              font-black
-              text-white
-            "
-          >
-            -
-          </h2>
-
-
-          <div
-            class="
-              mx-auto
-              mt-6
-              flex
-              items-center
-              justify-center
-              gap-2
-              text-sm
-              text-slate-400
-            "
-          >
 
             <div
               class="
-                h-4
-                w-4
-                animate-spin
-                rounded-full
-                border-2
-                border-slate-600
-                border-t-white
+                mt-4
+                flex
+                flex-wrap
+                gap-2
               "
-            ></div>
+            >
 
-            Mencari barang...
+              <span
+                id="dashboardNik"
+                class="
+                  rounded-full
+                  bg-white/10
+                  px-3
+                  py-1.5
+                  text-xs
+                  font-bold
+                "
+              >
+                NIK -
+              </span>
+
+
+              <span
+                id="dashboardRole"
+                class="
+                  rounded-full
+                  bg-red-600
+                  px-3
+                  py-1.5
+                  text-xs
+                  font-bold
+                "
+              >
+                PIC
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div
+            class="
+              flex
+              h-14
+              w-14
+              shrink-0
+              items-center
+              justify-center
+              rounded-2xl
+              bg-white/10
+            "
+          >
+            <i
+              data-lucide="user-round"
+              class="h-7 w-7"
+            ></i>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- TITLE -->
+
+      <div class="mb-4 mt-7">
+
+        <h2
+          class="
+            text-lg
+            font-black
+            lg:text-xl
+          "
+        >
+          Menu
+        </h2>
+
+        <p class="mt-1 text-sm text-slate-500">
+          Fitur warehouse akan kita aktifkan bertahap.
+        </p>
+
+      </div>
+
+
+      <!-- MENU CARDS -->
+
+      <div
+        class="
+          grid
+          grid-cols-2
+          gap-3
+          sm:grid-cols-3
+          lg:grid-cols-4
+        "
+      >
+
+        <!-- SEARCH -->
+
+        <button
+          type="button"
+          disabled
+          class="
+            dashboard-menu
+            opacity-50
+          "
+        >
+
+          <div
+            class="
+              dashboard-menu-icon
+              bg-red-50
+              text-red-600
+            "
+          >
+            <i data-lucide="search"></i>
+          </div>
+
+          <div class="mt-4">
+
+            <h3 class="font-black">
+              Cari Barang
+            </h3>
+
+            <p class="mt-1 text-xs text-slate-400">
+              Tahap berikutnya
+            </p>
+
+          </div>
+
+        </button>
+
+
+        <!-- IN -->
+
+        <button
+          type="button"
+          disabled
+          class="
+            dashboard-menu
+            opacity-50
+          "
+        >
+
+          <div
+            class="
+              dashboard-menu-icon
+              bg-emerald-50
+              text-emerald-600
+            "
+          >
+            <i data-lucide="package-plus"></i>
+          </div>
+
+          <div class="mt-4">
+
+            <h3 class="font-black">
+              Barang Masuk
+            </h3>
+
+            <p class="mt-1 text-xs text-slate-400">
+              Segera
+            </p>
+
+          </div>
+
+        </button>
+
+
+        <!-- OUT -->
+
+        <button
+          type="button"
+          disabled
+          class="
+            dashboard-menu
+            opacity-50
+          "
+        >
+
+          <div
+            class="
+              dashboard-menu-icon
+              bg-orange-50
+              text-orange-600
+            "
+          >
+            <i data-lucide="package-minus"></i>
+          </div>
+
+          <div class="mt-4">
+
+            <h3 class="font-black">
+              Barang Keluar
+            </h3>
+
+            <p class="mt-1 text-xs text-slate-400">
+              Segera
+            </p>
+
+          </div>
+
+        </button>
+
+
+        <!-- MOVE -->
+
+        <button
+          type="button"
+          disabled
+          class="
+            dashboard-menu
+            opacity-50
+          "
+        >
+
+          <div
+            class="
+              dashboard-menu-icon
+              bg-blue-50
+              text-blue-600
+            "
+          >
+            <i data-lucide="move-right"></i>
+          </div>
+
+          <div class="mt-4">
+
+            <h3 class="font-black">
+              Pindah
+            </h3>
+
+            <p class="mt-1 text-xs text-slate-400">
+              Segera
+            </p>
+
+          </div>
+
+        </button>
+
+      </div>
+
+
+      <!-- STATUS -->
+
+      <div
+        class="
+          mt-7
+          rounded-2xl
+          border
+          border-emerald-200
+          bg-emerald-50
+          p-4
+        "
+      >
+
+        <div class="flex gap-3">
+
+          <div
+            class="
+              flex
+              h-10
+              w-10
+              shrink-0
+              items-center
+              justify-center
+              rounded-xl
+              bg-emerald-100
+              text-emerald-600
+            "
+          >
+            <i
+              data-lucide="circle-check"
+              class="h-5 w-5"
+            ></i>
+          </div>
+
+
+          <div>
+
+            <h3
+              class="
+                text-sm
+                font-black
+                text-emerald-900
+              "
+            >
+              Login berhasil
+            </h3>
+
+            <p
+              class="
+                mt-1
+                text-xs
+                leading-5
+                text-emerald-700
+              "
+            >
+              Frontend GitHub Pages sudah terhubung
+              dengan backend n8n.
+            </p>
 
           </div>
 
@@ -724,56 +918,95 @@
 
       </div>
 
-    </div>
+    </section>
+
+  </main>
 
 
+  <!-- =====================================
+       MOBILE BOTTOM NAV
+  ====================================== -->
 
-    <!-- INSTRUCTION -->
-
-    <div
-      class="
-        mx-auto
-        mt-5
-        w-full
-        max-w-lg
-        text-center
-      "
-    >
-
-      <p
-        class="
-          font-semibold
-        "
-      >
-        Arahkan barcode ke dalam kotak
-      </p>
-
-
-      <p
-        class="
-          mt-1
-          text-sm
-          text-slate-400
-        "
-      >
-        Scanner akan membaca SKU secara otomatis.
-      </p>
-
-    </div>
-
-  </section>
-
-
-  <div
+  <nav
     class="
-      safe-bottom
-      h-8
+      mobile-bottom-nav
+      fixed
+      bottom-0
+      left-0
+      right-0
+      z-40
+      border-t
+      border-slate-200
+      bg-white
+      lg:hidden
     "
-  ></div>
+  >
+
+    <div class="grid grid-cols-5">
+
+      <button
+        class="
+          mobile-nav
+          mobile-nav-active
+        "
+      >
+        <i data-lucide="house"></i>
+        <span>Home</span>
+      </button>
 
 
-</main>
+      <button
+        disabled
+        class="
+          mobile-nav
+          opacity-40
+        "
+      >
+        <i data-lucide="search"></i>
+        <span>Cari</span>
+      </button>
 
+
+      <button
+        disabled
+        class="
+          mobile-nav
+          opacity-40
+        "
+      >
+        <i data-lucide="package-plus"></i>
+        <span>Masuk</span>
+      </button>
+
+
+      <button
+        disabled
+        class="
+          mobile-nav
+          opacity-40
+        "
+      >
+        <i data-lucide="package-minus"></i>
+        <span>Keluar</span>
+      </button>
+
+
+      <button
+        disabled
+        class="
+          mobile-nav
+          opacity-40
+        "
+      >
+        <i data-lucide="history"></i>
+        <span>History</span>
+      </button>
+
+    </div>
+
+  </nav>
+
+</div>
 
 
 <!-- =========================================
@@ -783,796 +1016,36 @@
 <div
   id="toast"
   class="
+    pointer-events-none
     fixed
     left-1/2
     top-5
-    z-[100]
+    z-[300]
     hidden
     w-[calc(100%-2rem)]
     max-w-sm
     -translate-x-1/2
     rounded-2xl
-    bg-white
+    bg-slate-900
     px-4
     py-3
     text-center
     text-sm
     font-semibold
-    text-slate-900
+    text-white
     shadow-xl
   "
 ></div>
 
 
-
-<script>
-
-/* =========================================
-   STATE
-========================================= */
-
-const ScannerState = {
-
-  scanner: null,
-
-  running: false,
-
-  detected: false,
-
-  returnUrl: ''
-
-};
-
-
-
-/* =========================================
-   INIT
-========================================= */
-
-document.addEventListener(
-  'DOMContentLoaded',
-  initScannerPage
-);
-
-
-
-function initScannerPage() {
-
-
-  lucide.createIcons();
-
-
-  const params =
-    new URLSearchParams(
-      window.location.search
-    );
-
-
-  ScannerState.returnUrl =
-    params.get(
-      'return'
-    ) || '';
-
-
-  document
-    .getElementById(
-      'startButton'
-    )
-    .addEventListener(
-      'click',
-      startScanner
-    );
-
-
-  document
-    .getElementById(
-      'backButton'
-    )
-    .addEventListener(
-      'click',
-      goBack
-    );
-
-
-  /*
-   * Scanner memang boleh dibuka
-   * langsung untuk testing,
-   * tetapi untuk penggunaan Apps Script
-   * return URL harus tersedia.
-   */
-  if (
-    !ScannerState.returnUrl
-  ) {
-
-    console.warn(
-      'Return URL tidak tersedia.'
-    );
-
-  }
-
-}
-
-
-
-/* =========================================
-   START SCANNER
-========================================= */
-
-async function startScanner() {
-
-
-  if (
-    ScannerState.running
-  ) {
-    return;
-  }
-
-
-  const button =
-    document.getElementById(
-      'startButton'
-    );
-
-
-  button.disabled =
-    true;
-
-
-  button.innerHTML = `
-
-    <div
-      class="
-        h-5
-        w-5
-        animate-spin
-        rounded-full
-        border-2
-        border-white/40
-        border-t-white
-      "
-    ></div>
-
-    Membuka kamera...
-
-  `;
-
-
-  try {
-
-
-    ScannerState.detected =
-      false;
-
-
-    if (
-      !ScannerState.scanner
-    ) {
-
-
-      ScannerState.scanner =
-        new Html5Qrcode(
-          'reader'
-        );
-
-    }
-
-
-
-    /*
-     * Prioritas kamera belakang.
-     */
-    try {
-
-
-      await ScannerState.scanner.start(
-
-        {
-
-          facingMode: {
-
-            exact:
-              'environment'
-
-          }
-
-        },
-
-        {
-
-          fps: 15,
-
-
-          qrbox:
-            calculateScanBox,
-
-
-          aspectRatio:
-            1.333333,
-
-
-          disableFlip:
-            false
-
-        },
-
-        onScanSuccess,
-
-        onScanFailure
-
-      );
-
-
-    } catch (
-      exactError
-    ) {
-
-
-      console.warn(
-        'Exact camera fallback:',
-        exactError
-      );
-
-
-      /*
-       * Fallback untuk HP yang
-       * tidak support exact environment.
-       */
-      await ScannerState.scanner.start(
-
-        {
-
-          facingMode:
-            'environment'
-
-        },
-
-        {
-
-          fps: 15,
-
-
-          qrbox:
-            calculateScanBox,
-
-
-          disableFlip:
-            false
-
-        },
-
-        onScanSuccess,
-
-        onScanFailure
-
-      );
-
-    }
-
-
-
-    ScannerState.running =
-      true;
-
-
-    document
-      .getElementById(
-        'startOverlay'
-      )
-      .classList.add(
-        'hidden'
-      );
-
-
-    setCameraStatus(
-      true,
-      'Scanner aktif'
-    );
-
-
-  } catch (error) {
-
-
-    console.error(
-      'Camera error:',
-      error
-    );
-
-
-    setCameraStatus(
-      false,
-      'Kamera gagal'
-    );
-
-
-    showToast(
-      'Kamera tidak dapat dibuka. Pastikan izin kamera diberikan.'
-    );
-
-
-  } finally {
-
-
-    button.disabled =
-      false;
-
-
-    button.innerHTML = `
-
-      <i
-        data-lucide="scan-barcode"
-        class="h-5 w-5"
-      ></i>
-
-      Mulai Scanner
-
-    `;
-
-
-    lucide.createIcons();
-
-  }
-
-}
-
-
-
-/* =========================================
-   SCAN AREA
-========================================= */
-
-function calculateScanBox(
-  viewfinderWidth,
-  viewfinderHeight
-) {
-
-
-  const width =
-    Math.floor(
-      viewfinderWidth * 0.82
-    );
-
-
-  const calculatedHeight =
-    Math.floor(
-      width * 0.42
-    );
-
-
-  const maxHeight =
-    Math.floor(
-      viewfinderHeight * 0.42
-    );
-
-
-  return {
-
-    width,
-
-    height:
-      Math.min(
-        calculatedHeight,
-        maxHeight
-      )
-
-  };
-
-}
-
-
-
-/* =========================================
-   SCAN SUCCESS
-========================================= */
-
-async function onScanSuccess(
-  decodedText,
-  decodedResult
-) {
-
-
-  if (
-    ScannerState.detected
-  ) {
-
-    return;
-
-  }
-
-
-  const sku =
-    String(
-      decodedText ||
-      ''
-    )
-      .trim()
-      .replace(
-        /[\r\n\t]/g,
-        ''
-      );
-
-
-  if (!sku) {
-
-    return;
-
-  }
-
-
-  ScannerState.detected =
-    true;
-
-
-
-  /*
-   * Feedback HP.
-   */
-  if (
-    navigator.vibrate
-  ) {
-
-    navigator.vibrate(
-      [100, 50, 100]
-    );
-
-  }
-
-
-
-  /*
-   * Camera stop.
-   */
-  await stopScanner();
-
-
-
-  /*
-   * Success UI.
-   */
-  document
-    .getElementById(
-      'scanResult'
-    )
-    .textContent =
-      sku;
-
-
-  const successOverlay =
-    document.getElementById(
-      'successOverlay'
-    );
-
-
-  successOverlay
-    .classList
-    .remove(
-      'hidden'
-    );
-
-
-  successOverlay
-    .classList
-    .add(
-      'flex'
-    );
-
-
-  setCameraStatus(
-    false,
-    'Berhasil'
-  );
-
-
-  lucide.createIcons();
-
-
-
-  /*
-   * Jika scanner dibuka dari
-   * Apps Script, redirect kembali.
-   */
-  if (
-    ScannerState.returnUrl
-  ) {
-
-
-    setTimeout(
-      () => {
-
-
-        redirectToApp(
-          sku
-        );
-
-
-      },
-      450
-    );
-
-
-  } else {
-
-
-    showToast(
-      `SKU terbaca: ${sku}`
-    );
-
-  }
-
-}
-
-
-
-/* =========================================
-   REDIRECT
-========================================= */
-
-function redirectToApp(
-  sku
-) {
-
-
-  const returnUrl =
-    ScannerState.returnUrl;
-
-
-  if (!returnUrl) {
-
-    return;
-
-  }
-
-
-  /*
-   * Aman jika return URL suatu hari
-   * sudah mempunyai query parameter.
-   */
-  const separator =
-    returnUrl.includes('?')
-      ? '&'
-      : '?';
-
-
-  const url =
-    returnUrl +
-    separator +
-    'sku=' +
-    encodeURIComponent(
-      sku
-    );
-
-
-  window.location.href =
-    url;
-
-}
-
-
-
-/* =========================================
-   SCAN FAILURE
-========================================= */
-
-function onScanFailure(
-  error
-) {
-
-
-  /*
-   * Sengaja kosong.
-   *
-   * Fungsi ini bisa terpanggil
-   * berkali-kali per detik.
-   *
-   * Jangan console.log untuk menjaga
-   * performa mobile.
-   */
-
-}
-
-
-
-/* =========================================
-   STOP
-========================================= */
-
-async function stopScanner() {
-
-
-  if (
-    !ScannerState.scanner ||
-    !ScannerState.running
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-
-    await ScannerState
-      .scanner
-      .stop();
-
-
-  } catch (error) {
-
-
-    console.warn(
-      'Stop scanner:',
-      error
-    );
-
-
-  } finally {
-
-
-    ScannerState.running =
-      false;
-
-  }
-
-}
-
-
-
-/* =========================================
-   BACK
-========================================= */
-
-async function goBack() {
-
-
-  await stopScanner();
-
-
-  if (
-    ScannerState.returnUrl
-  ) {
-
-
-    window.location.href =
-      ScannerState.returnUrl;
-
-
-    return;
-
-  }
-
-
-  if (
-    window.history.length > 1
-  ) {
-
-
-    window.history.back();
-
-
-  } else {
-
-
-    window.location.href =
-      'https://muhrobby.github.io/warehouse-scanner/';
-
-  }
-
-}
-
-
-
-/* =========================================
-   STATUS
-========================================= */
-
-function setCameraStatus(
-  active,
-  text
-) {
-
-
-  const dot =
-    document.getElementById(
-      'statusDot'
-    );
-
-
-  const status =
-    document.getElementById(
-      'statusText'
-    );
-
-
-  status.textContent =
-    text;
-
-
-  dot.className =
-    active
-      ? 'h-2 w-2 rounded-full bg-emerald-400'
-      : 'h-2 w-2 rounded-full bg-amber-400';
-
-}
-
-
-
-/* =========================================
-   TOAST
-========================================= */
-
-function showToast(
-  message
-) {
-
-
-  const toast =
-    document.getElementById(
-      'toast'
-    );
-
-
-  toast.textContent =
-    message;
-
-
-  toast.classList.remove(
-    'hidden'
-  );
-
-
-  clearTimeout(
-    window.__toastTimer
-  );
-
-
-  window.__toastTimer =
-    setTimeout(
-      () => {
-
-
-        toast.classList.add(
-          'hidden'
-        );
-
-
-      },
-      2500
-    );
-
-}
-
-
-
-/* =========================================
-   CLEANUP
-========================================= */
-
-window.addEventListener(
-  'beforeunload',
-  () => {
-
-
-    if (
-      ScannerState.scanner &&
-      ScannerState.running
-    ) {
-
-
-      ScannerState
-        .scanner
-        .stop()
-        .catch(
-          () => {}
-        );
-
-    }
-
-  }
-);
-
-</script>
-
+<!-- =========================================
+     JAVASCRIPT
+========================================= -->
+
+<script src="./js/config.js"></script>
+<script src="./js/api.js"></script>
+<script src="./js/auth.js"></script>
+<script src="./js/app.js"></script>
 
 </body>
-
 </html>
