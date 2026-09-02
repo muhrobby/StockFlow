@@ -35,1544 +35,365 @@
     };
   </script>
 
-  <link
-    rel="stylesheet"
-    href="./css/app.css"
-  >
+  <link rel="stylesheet" href="./css/app.css">
 </head>
 
-
 <body class="bg-slate-50 text-slate-900 antialiased">
-
 
 <!-- =========================================
      BOOT
 ========================================= -->
-
-<section
-  id="bootPage"
-  class="
-    fixed
-    inset-0
-    z-[200]
-    flex
-    items-center
-    justify-center
-    bg-slate-50
-  "
->
-
+<section id="bootPage" class="fixed inset-0 z-[200] flex items-center justify-center bg-slate-50">
   <div class="text-center">
-
-    <div
-      class="
-        mx-auto
-        flex
-        h-16
-        w-16
-        items-center
-        justify-center
-        rounded-3xl
-        bg-red-600
-        text-white
-        shadow-lg
-        shadow-red-200
-      "
-    >
-      <i
-        data-lucide="package-search"
-        class="h-8 w-8"
-      ></i>
+    <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-red-600 text-white shadow-lg shadow-red-200">
+      <i data-lucide="package-search" class="h-8 w-8"></i>
     </div>
-
-    <div
-      class="
-        mx-auto
-        mt-6
-        h-6
-        w-6
-        animate-spin
-        rounded-full
-        border-2
-        border-slate-200
-        border-t-red-600
-      "
-    ></div>
-
-    <p class="mt-4 text-sm font-semibold text-slate-500">
-      Menyiapkan aplikasi...
-    </p>
-
+    <div class="mx-auto mt-6 h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-red-600"></div>
+    <p class="mt-4 text-sm font-semibold text-slate-500">Menyiapkan aplikasi...</p>
   </div>
-
 </section>
-
 
 <!-- =========================================
      LOGIN
 ========================================= -->
-
-<section
-  id="loginPage"
-  class="
-    hidden
-    min-h-screen
-    items-center
-    justify-center
-    p-5
-  "
->
-
+<section id="loginPage" class="hidden min-h-screen items-center justify-center p-5">
   <div class="w-full max-w-sm">
-
     <div class="mb-8 text-center">
-
-      <div
-        class="
-          mx-auto
-          mb-4
-          flex
-          h-16
-          w-16
-          items-center
-          justify-center
-          rounded-3xl
-          bg-red-600
-          text-white
-          shadow-lg
-          shadow-red-200
-        "
-      >
-        <i
-          data-lucide="package-search"
-          class="h-8 w-8"
-        ></i>
+      <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-red-600 text-white shadow-lg shadow-red-200">
+        <i data-lucide="package-search" class="h-8 w-8"></i>
       </div>
-
-      <h1 class="text-2xl font-black">
-        Warehouse App
-      </h1>
-
-      <p class="mt-2 text-sm text-slate-500">
-        Masukkan NIK untuk melanjutkan
-      </p>
-
+      <h1 class="text-2xl font-black">Warehouse App</h1>
+      <p class="mt-2 text-sm text-slate-500">Masukkan NIK untuk melanjutkan</p>
     </div>
 
-
-    <form
-      id="loginForm"
-      class="
-        rounded-3xl
-        bg-white
-        p-6
-        shadow-sm
-        ring-1
-        ring-slate-200
-      "
-    >
-
-      <label
-        for="nikInput"
-        class="mb-2 block text-sm font-semibold"
-      >
-        NIK
-      </label>
-
-
+    <form id="loginForm" class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <label for="nikInput" class="mb-2 block text-sm font-semibold">NIK</label>
       <div class="relative">
-
-        <i
-          data-lucide="badge-user"
-          class="
-            absolute
-            left-4
-            top-1/2
-            h-5
-            w-5
-            -translate-y-1/2
-            text-slate-400
-          "
-        ></i>
-
-        <input
-          id="nikInput"
-          type="text"
-          inputmode="numeric"
-          autocomplete="off"
-          placeholder="Masukkan NIK"
-          class="
-            h-14
-            w-full
-            rounded-2xl
-            border
-            border-slate-200
-            bg-slate-50
-            pl-12
-            pr-4
-            text-lg
-            font-bold
-            outline-none
-            transition
-            focus:border-red-500
-            focus:bg-white
-            focus:ring-4
-            focus:ring-red-100
-          "
-        >
-
+        <i data-lucide="badge-user" class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></i>
+        <input id="nikInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Masukkan NIK" class="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-lg font-bold outline-none transition focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-100">
       </div>
-
-
-      <div
-        id="loginError"
-        class="
-          mt-3
-          hidden
-          rounded-xl
-          bg-red-50
-          px-4
-          py-3
-          text-sm
-          font-medium
-          text-red-700
-        "
-      ></div>
-
-
-      <button
-        id="loginButton"
-        type="submit"
-        class="
-          mt-5
-          flex
-          h-14
-          w-full
-          items-center
-          justify-center
-          gap-2
-          rounded-2xl
-          bg-red-600
-          font-bold
-          text-white
-          transition
-          hover:bg-red-700
-          active:scale-[.98]
-          disabled:cursor-not-allowed
-          disabled:opacity-60
-        "
-      >
-
+      <div id="loginError" class="mt-3 hidden rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700"></div>
+      <button id="loginButton" type="submit" class="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-red-600 font-bold text-white transition hover:bg-red-700 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60">
         <span>Masuk</span>
-
-        <i
-          data-lucide="arrow-right"
-          class="h-5 w-5"
-        ></i>
-
+        <i data-lucide="arrow-right" class="h-5 w-5"></i>
       </button>
-
     </form>
-
   </div>
-
 </section>
-
 
 <!-- =========================================
      APPLICATION
 ========================================= -->
-
-<div
-  id="appPage"
-  class="hidden min-h-screen lg:flex"
->
-
+<div id="appPage" class="hidden min-h-screen lg:flex">
 
   <!-- DESKTOP SIDEBAR -->
-
-  <aside
-    class="
-      hidden
-      w-64
-      shrink-0
-      border-r
-      border-slate-200
-      bg-white
-      lg:flex
-      lg:flex-col
-    "
-  >
-
-    <div
-      class="
-        flex
-        h-20
-        items-center
-        gap-3
-        border-b
-        border-slate-100
-        px-6
-      "
-    >
-
-      <div
-        class="
-          flex
-          h-10
-          w-10
-          items-center
-          justify-center
-          rounded-xl
-          bg-red-600
-          text-white
-        "
-      >
-        <i
-          data-lucide="package-search"
-          class="h-5 w-5"
-        ></i>
+  <aside class="hidden w-64 shrink-0 border-r border-slate-200 bg-white lg:flex lg:flex-col">
+    <div class="flex h-20 items-center gap-3 border-b border-slate-100 px-6">
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-600 text-white">
+        <i data-lucide="package-search" class="h-5 w-5"></i>
       </div>
-
       <div>
-        <div class="font-black">
-          Warehouse
-        </div>
-
-        <div class="text-xs text-slate-400">
-          Inventory App
-        </div>
+        <div class="font-black">Warehouse</div>
+        <div class="text-xs text-slate-400">Inventory App</div>
       </div>
-
     </div>
 
-
     <nav class="flex-1 space-y-2 p-4">
-
-      <button
-        type="button"
-        class="desktop-nav desktop-nav-active"
-        data-page="dashboard"
-      >
+      <button type="button" class="desktop-nav desktop-nav-active" data-page="dashboard">
         <i data-lucide="house"></i>
         Dashboard
       </button>
 
-
-      <button
-        type="button"
-        class="desktop-nav"
-        data-page="search"
-      >
+      <button type="button" class="desktop-nav" data-page="search">
         <i data-lucide="search"></i>
         Cari Barang
       </button>
 
-
-      <button
-        class="desktop-nav desktop-nav-disabled"
-        disabled
-      >
-        <i data-lucide="package-plus"></i>
-        Barang Masuk
+      <button type="button" class="desktop-nav" data-page="movement">
+        <i data-lucide="arrow-left-right"></i>
+        Movement
       </button>
 
-
-      <button
-        class="desktop-nav desktop-nav-disabled"
-        disabled
-      >
-        <i data-lucide="package-minus"></i>
-        Barang Keluar
-      </button>
-
-
-      <button
-        class="desktop-nav desktop-nav-disabled"
-        disabled
-      >
-        <i data-lucide="move-right"></i>
-        Pindah Barang
-      </button>
-
-
-      <button
-        class="desktop-nav desktop-nav-disabled"
-        disabled
-      >
+      <button type="button" class="desktop-nav" data-page="history">
         <i data-lucide="history"></i>
         Riwayat
       </button>
-
     </nav>
 
-
     <div class="border-t border-slate-100 p-4">
-
-      <button
-        id="desktopLogoutButton"
-        type="button"
-        class="
-          flex
-          h-11
-          w-full
-          items-center
-          gap-3
-          rounded-xl
-          px-3
-          text-sm
-          font-semibold
-          text-slate-500
-          hover:bg-slate-100
-        "
-      >
-        <i
-          data-lucide="log-out"
-          class="h-5 w-5"
-        ></i>
-
+      <button id="desktopLogoutButton" type="button" class="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-slate-500 hover:bg-slate-100">
+        <i data-lucide="log-out" class="h-5 w-5"></i>
         Keluar
       </button>
-
     </div>
-
   </aside>
 
-
   <!-- MAIN -->
-
   <main class="min-w-0 flex-1 pb-24 lg:pb-0">
-
-
     <!-- HEADER -->
-
-    <header
-      class="
-        sticky
-        top-0
-        z-30
-        border-b
-        border-slate-200
-        bg-white/95
-        backdrop-blur
-      "
-    >
-
-      <div
-        class="
-          mx-auto
-          flex
-          h-16
-          max-w-5xl
-          items-center
-          justify-between
-          px-4
-          lg:h-20
-          lg:px-8
-        "
-      >
-
+    <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+      <div class="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 lg:h-20 lg:px-8">
         <div>
-
-          <p
-            id="headerPageLabel"
-            class="text-xs font-medium text-slate-400"
-          >
-            Selamat bekerja
-          </p>
-
-          <h2
-            id="headerTitle"
-            class="font-black"
-          >
-            Dashboard
-          </h2>
-
+          <p id="headerPageLabel" class="text-xs font-medium text-slate-400">Selamat bekerja</p>
+          <h2 id="headerTitle" class="font-black">Dashboard</h2>
         </div>
-
 
         <div class="hidden text-right lg:block">
-
-          <p
-            id="headerUserName"
-            class="text-sm font-bold"
-          >
-            PIC
-          </p>
-
-          <p
-            id="headerUserNik"
-            class="text-xs text-slate-400"
-          >
-            -
-          </p>
-
+          <p id="headerUserName" class="text-sm font-bold">PIC</p>
+          <p id="headerUserNik" class="text-xs text-slate-400">-</p>
         </div>
 
-
-        <button
-          id="mobileLogoutButton"
-          type="button"
-          class="
-            flex
-            h-10
-            w-10
-            items-center
-            justify-center
-            rounded-xl
-            bg-slate-100
-            text-slate-500
-            active:scale-95
-            lg:hidden
-          "
-        >
-          <i
-            data-lucide="log-out"
-            class="h-5 w-5"
-          ></i>
+        <button id="mobileLogoutButton" type="button" class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500 active:scale-95 lg:hidden">
+          <i data-lucide="log-out" class="h-5 w-5"></i>
         </button>
-
       </div>
-
     </header>
 
-
-    <!-- =====================================
-         DASHBOARD
-    ====================================== -->
-
-    <section
-      id="dashboardPage"
-      class="
-        mx-auto
-        max-w-5xl
-        px-4
-        py-5
-        lg:px-8
-        lg:py-8
-      "
-    >
-
-      <div
-        class="
-          overflow-hidden
-          rounded-3xl
-          bg-slate-900
-          p-5
-          text-white
-          shadow-sm
-          lg:p-7
-        "
-      >
-
-        <div
-          class="
-            flex
-            items-start
-            justify-between
-            gap-4
-          "
-        >
-
+    <!-- DASHBOARD -->
+    <section id="dashboardPage" class="mx-auto max-w-5xl px-4 py-5 lg:px-8 lg:py-8">
+      <div class="overflow-hidden rounded-3xl bg-slate-900 p-5 text-white shadow-sm lg:p-7">
+        <div class="flex items-start justify-between gap-4">
           <div>
-
-            <p class="text-sm font-medium text-slate-400">
-              Login sebagai
-            </p>
-
-            <h1
-              id="dashboardUserName"
-              class="
-                mt-1
-                text-2xl
-                font-black
-                lg:text-3xl
-              "
-            >
-              -
-            </h1>
-
-
+            <p class="text-sm font-medium text-slate-400">Login sebagai</p>
+            <h1 id="dashboardUserName" class="mt-1 text-2xl font-black lg:text-3xl">-</h1>
             <div class="mt-4 flex flex-wrap gap-2">
-
-              <span
-                id="dashboardNik"
-                class="
-                  rounded-full
-                  bg-white/10
-                  px-3
-                  py-1.5
-                  text-xs
-                  font-bold
-                "
-              >
-                NIK -
-              </span>
-
-
-              <span
-                id="dashboardRole"
-                class="
-                  rounded-full
-                  bg-red-600
-                  px-3
-                  py-1.5
-                  text-xs
-                  font-bold
-                "
-              >
-                PIC
-              </span>
-
+              <span id="dashboardNik" class="rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold">NIK -</span>
+              <span id="dashboardRole" class="rounded-full bg-red-600 px-3 py-1.5 text-xs font-bold">PIC</span>
             </div>
-
           </div>
-
-
-          <div
-            class="
-              flex
-              h-14
-              w-14
-              shrink-0
-              items-center
-              justify-center
-              rounded-2xl
-              bg-white/10
-            "
-          >
-            <i
-              data-lucide="user-round"
-              class="h-7 w-7"
-            ></i>
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10">
+            <i data-lucide="user-round" class="h-7 w-7"></i>
           </div>
-
         </div>
-
       </div>
-
 
       <div class="mb-4 mt-7">
-
-        <h2 class="text-lg font-black lg:text-xl">
-          Menu
-        </h2>
-
-        <p class="mt-1 text-sm text-slate-500">
-          Pilih aktivitas warehouse.
-        </p>
-
+        <h2 class="text-lg font-black lg:text-xl">Menu</h2>
+        <p class="mt-1 text-sm text-slate-500">Pilih aktivitas warehouse.</p>
       </div>
 
-
-      <div
-        class="
-          grid
-          grid-cols-2
-          gap-3
-          sm:grid-cols-3
-          lg:grid-cols-4
-        "
-      >
-
-        <button
-          id="dashboardSearchButton"
-          type="button"
-          class="
-            dashboard-menu
-            transition
-            hover:border-red-200
-            hover:shadow-md
-            active:scale-[.98]
-          "
-        >
-
-          <div
-            class="
-              dashboard-menu-icon
-              bg-red-50
-              text-red-600
-            "
-          >
-            <i data-lucide="search"></i>
-          </div>
-
-          <div class="mt-4">
-
-            <h3 class="font-black">
-              Cari Barang
-            </h3>
-
-            <p class="mt-1 text-xs text-slate-400">
-              Cari SKU dan lokasi
-            </p>
-
-          </div>
-
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <button id="dashboardSearchButton" type="button" data-page="search" class="dashboard-menu transition hover:border-red-200 hover:shadow-md active:scale-[.98]">
+          <div class="dashboard-menu-icon bg-red-50 text-red-600"><i data-lucide="search"></i></div>
+          <div class="mt-4"><h3 class="font-black">Cari Barang</h3><p class="mt-1 text-xs text-slate-400">Cari SKU dan lokasi</p></div>
         </button>
 
-
-        <button
-          disabled
-          class="dashboard-menu opacity-50"
-        >
-
-          <div
-            class="
-              dashboard-menu-icon
-              bg-emerald-50
-              text-emerald-600
-            "
-          >
-            <i data-lucide="package-plus"></i>
-          </div>
-
-          <div class="mt-4">
-            <h3 class="font-black">
-              Barang Masuk
-            </h3>
-
-            <p class="mt-1 text-xs text-slate-400">
-              Segera
-            </p>
-          </div>
-
+        <button id="dashboardMovementButton" type="button" data-page="movement" class="dashboard-menu transition hover:border-red-200 hover:shadow-md active:scale-[.98]">
+          <div class="dashboard-menu-icon bg-blue-50 text-blue-600"><i data-lucide="arrow-left-right"></i></div>
+          <div class="mt-4"><h3 class="font-black">Movement</h3><p class="mt-1 text-xs text-slate-400">Masuk, keluar, pindah</p></div>
         </button>
 
-
-        <button
-          disabled
-          class="dashboard-menu opacity-50"
-        >
-
-          <div
-            class="
-              dashboard-menu-icon
-              bg-orange-50
-              text-orange-600
-            "
-          >
-            <i data-lucide="package-minus"></i>
-          </div>
-
-          <div class="mt-4">
-            <h3 class="font-black">
-              Barang Keluar
-            </h3>
-
-            <p class="mt-1 text-xs text-slate-400">
-              Segera
-            </p>
-          </div>
-
+        <button id="dashboardHistoryButton" type="button" data-page="history" class="dashboard-menu transition hover:border-red-200 hover:shadow-md active:scale-[.98]">
+          <div class="dashboard-menu-icon bg-slate-100 text-slate-700"><i data-lucide="history"></i></div>
+          <div class="mt-4"><h3 class="font-black">Riwayat</h3><p class="mt-1 text-xs text-slate-400">Riwayat movement</p></div>
         </button>
-
-
-        <button
-          disabled
-          class="dashboard-menu opacity-50"
-        >
-
-          <div
-            class="
-              dashboard-menu-icon
-              bg-blue-50
-              text-blue-600
-            "
-          >
-            <i data-lucide="move-right"></i>
-          </div>
-
-          <div class="mt-4">
-            <h3 class="font-black">
-              Pindah
-            </h3>
-
-            <p class="mt-1 text-xs text-slate-400">
-              Segera
-            </p>
-          </div>
-
-        </button>
-
       </div>
-
     </section>
 
-
-    <!-- =====================================
-         SEARCH PAGE
-    ====================================== -->
-
-    <section
-      id="searchPage"
-      class="
-        mx-auto
-        hidden
-        max-w-5xl
-        px-4
-        py-5
-        lg:px-8
-        lg:py-8
-      "
-    >
-
-      <div
-        class="
-          rounded-3xl
-          bg-white
-          p-5
-          shadow-sm
-          ring-1
-          ring-slate-200
-          lg:p-6
-        "
-      >
-
+    <!-- SEARCH PAGE -->
+    <section id="searchPage" class="mx-auto hidden max-w-5xl px-4 py-5 lg:px-8 lg:py-8">
+      <div class="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:p-6">
         <div class="mb-5 flex items-start gap-3">
-
-          <div
-            class="
-              flex
-              h-12
-              w-12
-              shrink-0
-              items-center
-              justify-center
-              rounded-2xl
-              bg-red-50
-              text-red-600
-            "
-          >
-            <i
-              data-lucide="package-search"
-              class="h-6 w-6"
-            ></i>
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-600">
+            <i data-lucide="package-search" class="h-6 w-6"></i>
           </div>
-
           <div>
-
-            <h1 class="text-xl font-black">
-              Cari Barang
-            </h1>
-
-            <p
-              class="
-                mt-1
-                text-sm
-                leading-5
-                text-slate-500
-              "
-            >
-              Scan barcode atau masukkan SKU secara manual.
-            </p>
-
+            <h1 class="text-xl font-black">Cari Barang</h1>
+            <p class="mt-1 text-sm leading-5 text-slate-500">Scan barcode atau masukkan SKU secara manual.</p>
           </div>
-
         </div>
 
-
-        <!-- SCAN BUTTON -->
-
-        <button
-          id="scanCameraButton"
-          type="button"
-          class="
-            mb-4
-            flex
-            min-h-16
-            w-full
-            items-center
-            justify-between
-            rounded-2xl
-            bg-slate-900
-            p-4
-            text-left
-            text-white
-            transition
-            hover:bg-slate-800
-            active:scale-[.99]
-          "
-        >
-
+        <button id="scanCameraButton" type="button" class="mb-4 flex min-h-16 w-full items-center justify-between rounded-2xl bg-slate-900 p-4 text-left text-white transition hover:bg-slate-800 active:scale-[.99]">
           <div class="flex items-center gap-3">
-
-            <div
-              class="
-                flex
-                h-11
-                w-11
-                items-center
-                justify-center
-                rounded-xl
-                bg-red-600
-              "
-            >
-              <i
-                data-lucide="scan-barcode"
-                class="h-6 w-6"
-              ></i>
-            </div>
-
-            <div>
-
-              <p class="font-black">
-                Scan Barcode
-              </p>
-
-              <p class="mt-0.5 text-xs text-slate-400">
-                Gunakan kamera belakang HP
-              </p>
-
-            </div>
-
+            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600"><i data-lucide="scan-barcode" class="h-6 w-6"></i></div>
+            <div><p class="font-black">Scan Barcode</p><p class="mt-0.5 text-xs text-slate-400">Gunakan kamera belakang HP</p></div>
           </div>
-
-          <i
-            data-lucide="camera"
-            class="h-5 w-5 text-slate-400"
-          ></i>
-
+          <i data-lucide="camera" class="h-5 w-5 text-slate-400"></i>
         </button>
 
-
-        <div
-          class="
-            my-4
-            flex
-            items-center
-            gap-3
-          "
-        >
-
+        <div class="my-4 flex items-center gap-3">
           <div class="h-px flex-1 bg-slate-200"></div>
-
-          <span
-            class="
-              text-xs
-              font-bold
-              uppercase
-              tracking-wide
-              text-slate-400
-            "
-          >
-            atau manual
-          </span>
-
+          <span class="text-xs font-bold uppercase tracking-wide text-slate-400">atau manual</span>
           <div class="h-px flex-1 bg-slate-200"></div>
-
         </div>
 
-
-        <!-- MANUAL SEARCH -->
-
-        <form
-          id="searchForm"
-          class="space-y-3"
-        >
-
-          <label
-            for="skuInput"
-            class="block text-sm font-bold"
-          >
-            SKU
-          </label>
-
-
+        <form id="searchForm" class="space-y-3">
+          <label for="skuInput" class="block text-sm font-bold">SKU</label>
           <div class="flex gap-2">
-
             <div class="relative min-w-0 flex-1">
-
-              <i
-                data-lucide="barcode"
-                class="
-                  absolute
-                  left-4
-                  top-1/2
-                  h-5
-                  w-5
-                  -translate-y-1/2
-                  text-slate-400
-                "
-              ></i>
-
-
-              <input
-                id="skuInput"
-                type="text"
-                autocomplete="off"
-                placeholder="Contoh: 100001"
-                class="
-                  h-14
-                  w-full
-                  rounded-2xl
-                  border
-                  border-slate-200
-                  bg-slate-50
-                  pl-12
-                  pr-4
-                  text-base
-                  font-bold
-                  outline-none
-                  transition
-                  focus:border-red-500
-                  focus:bg-white
-                  focus:ring-4
-                  focus:ring-red-100
-                "
-              >
-
+              <i data-lucide="barcode" class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></i>
+              <input id="skuInput" type="text" autocomplete="off" placeholder="Contoh: 100001" class="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-base font-bold outline-none transition focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-100">
             </div>
-
-
-            <button
-              id="searchButton"
-              type="submit"
-              class="
-                flex
-                h-14
-                shrink-0
-                items-center
-                justify-center
-                gap-2
-                rounded-2xl
-                bg-red-600
-                px-5
-                font-bold
-                text-white
-                transition
-                hover:bg-red-700
-                active:scale-[.98]
-                disabled:cursor-not-allowed
-                disabled:opacity-60
-              "
-            >
-
-              <i
-                data-lucide="search"
-                class="h-5 w-5"
-              ></i>
-
-              <span class="hidden sm:inline">
-                Cari
-              </span>
-
+            <button id="searchButton" type="submit" class="flex h-14 shrink-0 items-center justify-center gap-2 rounded-2xl bg-red-600 px-5 font-bold text-white transition hover:bg-red-700 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60">
+              <i data-lucide="search" class="h-5 w-5"></i>
+              <span class="hidden sm:inline">Cari</span>
             </button>
-
           </div>
-
         </form>
-
       </div>
 
-
-      <!-- ERROR -->
-
-      <div
-        id="searchError"
-        class="
-          mt-4
-          hidden
-          rounded-2xl
-          border
-          border-red-200
-          bg-red-50
-          p-4
-        "
-      >
-
+      <div id="searchError" class="mt-4 hidden rounded-2xl border border-red-200 bg-red-50 p-4">
         <div class="flex gap-3">
-
-          <div
-            class="
-              flex
-              h-10
-              w-10
-              shrink-0
-              items-center
-              justify-center
-              rounded-xl
-              bg-red-100
-              text-red-600
-            "
-          >
-            <i
-              data-lucide="triangle-alert"
-              class="h-5 w-5"
-            ></i>
-          </div>
-
-
-          <div>
-
-            <h3
-              class="
-                text-sm
-                font-black
-                text-red-900
-              "
-            >
-              Pencarian gagal
-            </h3>
-
-            <p
-              id="searchErrorMessage"
-              class="
-                mt-1
-                text-sm
-                text-red-700
-              "
-            >
-              -
-            </p>
-
-          </div>
-
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600"><i data-lucide="triangle-alert" class="h-5 w-5"></i></div>
+          <div><h3 class="text-sm font-black text-red-900">Pencarian gagal</h3><p id="searchErrorMessage" class="mt-1 text-sm text-red-700">-</p></div>
         </div>
-
       </div>
 
-
-      <!-- RESULT -->
-
-      <div
-        id="searchResult"
-        class="mt-4 hidden"
-      >
-
-        <div
-          class="
-            overflow-hidden
-            rounded-3xl
-            bg-slate-900
-            p-5
-            text-white
-            shadow-sm
-            lg:p-6
-          "
-        >
-
-          <div
-            class="
-              flex
-              items-start
-              justify-between
-              gap-4
-            "
-          >
-
+      <div id="searchResult" class="mt-4 hidden">
+        <div class="overflow-hidden rounded-3xl bg-slate-900 p-5 text-white shadow-sm lg:p-6">
+          <div class="flex items-start justify-between gap-4">
             <div class="min-w-0">
-
-              <p
-                id="resultSku"
-                class="
-                  text-sm
-                  font-bold
-                  text-red-400
-                "
-              >
-                SKU -
-              </p>
-
-              <h2
-                id="resultDescription"
-                class="
-                  mt-1
-                  text-xl
-                  font-black
-                  leading-tight
-                  lg:text-2xl
-                "
-              >
-                -
-              </h2>
-
+              <p id="resultSku" class="text-sm font-bold text-red-400">SKU -</p>
+              <h2 id="resultDescription" class="mt-1 text-xl font-black leading-tight lg:text-2xl">-</h2>
             </div>
-
-
-            <div
-              class="
-                flex
-                h-12
-                w-12
-                shrink-0
-                items-center
-                justify-center
-                rounded-2xl
-                bg-white/10
-              "
-            >
-              <i
-                data-lucide="package"
-                class="h-6 w-6"
-              ></i>
-            </div>
-
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10"><i data-lucide="package" class="h-6 w-6"></i></div>
           </div>
-
-
-          <div
-            class="
-              mt-5
-              rounded-2xl
-              bg-white/10
-              p-4
-            "
-          >
-
-            <p
-              class="
-                text-xs
-                font-medium
-                uppercase
-                tracking-wide
-                text-slate-400
-              "
-            >
-              Total Stock
-            </p>
-
-            <div class="mt-1 flex items-end gap-2">
-
-              <span
-                id="resultTotalStock"
-                class="text-4xl font-black"
-              >
-                0
-              </span>
-
-              <span
-                class="
-                  pb-1
-                  text-sm
-                  font-medium
-                  text-slate-400
-                "
-              >
-                pcs
-              </span>
-
-            </div>
-
+          <div class="mt-5 rounded-2xl bg-white/10 p-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Total Stock</p>
+            <div class="mt-1 flex items-end gap-2"><span id="resultTotalStock" class="text-4xl font-black">0</span><span class="pb-1 text-sm font-medium text-slate-400">pcs</span></div>
           </div>
-
         </div>
-
 
         <div class="mt-5">
-
-          <div class="mb-3">
-
-            <h3 class="font-black">
-              Lokasi Stock
-            </h3>
-
-            <p
-              id="locationCount"
-              class="mt-0.5 text-xs text-slate-400"
-            >
-              -
-            </p>
-
-          </div>
-
-
-          <div
-            id="locationList"
-            class="space-y-3"
-          ></div>
-
+          <div class="mb-3"><h3 class="font-black">Lokasi Stock</h3><p id="locationCount" class="mt-0.5 text-xs text-slate-400">-</p></div>
+          <div id="locationList" class="space-y-3"></div>
         </div>
-
       </div>
-
     </section>
 
-  </main>
-
-
-  <!-- MOBILE BOTTOM NAV -->
-
-  <nav
-    class="
-      mobile-bottom-nav
-      fixed
-      bottom-0
-      left-0
-      right-0
-      z-40
-      border-t
-      border-slate-200
-      bg-white
-      lg:hidden
-    "
-  >
-
-    <div class="grid grid-cols-5">
-
-      <button
-        type="button"
-        class="mobile-nav mobile-nav-active"
-        data-page="dashboard"
-      >
-        <i data-lucide="house"></i>
-        <span>Home</span>
-      </button>
-
-
-      <button
-        type="button"
-        class="mobile-nav"
-        data-page="search"
-      >
-        <i data-lucide="search"></i>
-        <span>Cari</span>
-      </button>
-
-
-      <button
-        disabled
-        class="mobile-nav opacity-40"
-      >
-        <i data-lucide="package-plus"></i>
-        <span>Masuk</span>
-      </button>
-
-
-      <button
-        disabled
-        class="mobile-nav opacity-40"
-      >
-        <i data-lucide="package-minus"></i>
-        <span>Keluar</span>
-      </button>
-
-
-      <button
-        disabled
-        class="mobile-nav opacity-40"
-      >
-        <i data-lucide="history"></i>
-        <span>History</span>
-      </button>
-
-    </div>
-
-  </nav>
-
-</div>
-
-
-<!-- =========================================
-     CAMERA SCANNER MODAL
-========================================= -->
-
-<div
-  id="scannerModal"
-  class="
-    fixed
-    inset-0
-    z-[500]
-    hidden
-    bg-slate-950
-  "
->
-
-  <div
-    class="
-      flex
-      min-h-[100dvh]
-      flex-col
-    "
-  >
-
-    <!-- SCANNER HEADER -->
-
-    <div
-      class="
-        flex
-        h-16
-        shrink-0
-        items-center
-        justify-between
-        px-4
-        text-white
-      "
-    >
-
-      <div>
-
-        <p class="text-xs text-slate-400">
-          Warehouse
-        </p>
-
-        <h2 class="font-black">
-          Scan Barcode
-        </h2>
-
-      </div>
-
-
-      <button
-        id="scannerCloseButton"
-        type="button"
-        class="
-          flex
-          h-11
-          w-11
-          items-center
-          justify-center
-          rounded-2xl
-          bg-white/10
-          text-white
-          active:scale-95
-        "
-      >
-        <i
-          data-lucide="x"
-          class="h-6 w-6"
-        ></i>
-      </button>
-
-    </div>
-
-
-    <!-- CAMERA -->
-
-    <div
-      class="
-        flex
-        flex-1
-        flex-col
-        justify-center
-        px-4
-        pb-8
-      "
-    >
-
-      <div
-        class="
-          mx-auto
-          w-full
-          max-w-md
-          overflow-hidden
-          rounded-3xl
-          bg-black
-          ring-1
-          ring-white/10
-        "
-      >
-
-        <div
-          id="cameraReader"
-          class="w-full"
-        ></div>
-
-      </div>
-
-
-      <div
-        class="
-          mx-auto
-          mt-5
-          w-full
-          max-w-md
-          text-center
-        "
-      >
-
-        <div
-          class="
-            inline-flex
-            items-center
-            gap-2
-            rounded-full
-            bg-white/10
-            px-4
-            py-2
-            text-xs
-            font-bold
-            text-white
-          "
-        >
-
-          <span
-            class="
-              h-2
-              w-2
-              animate-pulse
-              rounded-full
-              bg-red-500
-            "
-          ></span>
-
-          <span id="scannerStatus">
-            Menyiapkan kamera...
-          </span>
-
+    <!-- MOVEMENT PAGE -->
+    <section id="movementPage" class="mx-auto hidden max-w-5xl px-4 py-5 lg:px-8 lg:py-8">
+      <div class="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:p-6">
+        <div class="mb-6 flex items-start gap-3">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+            <i data-lucide="arrow-left-right" class="h-6 w-6"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-black">Movement Barang</h1>
+            <p class="mt-1 text-sm leading-5 text-slate-500">Catat barang masuk, keluar, atau pindah lokasi.</p>
+          </div>
         </div>
 
+        <form id="movementForm" class="space-y-5">
+          <div>
+            <label for="movementType" class="mb-2 block text-sm font-bold">Jenis Movement</label>
+            <select id="movementType" class="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-base font-bold outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100">
+              <option value="IN">Barang Masuk</option>
+              <option value="OUT">Barang Keluar</option>
+              <option value="MOVE">Pindah Barang</option>
+            </select>
+          </div>
 
-        <p
-          class="
-            mx-auto
-            mt-4
-            max-w-xs
-            text-sm
-            leading-6
-            text-slate-400
-          "
-        >
-          Arahkan barcode produk ke dalam area kamera.
-          Pencarian akan berjalan otomatis setelah barcode terbaca.
-        </p>
+          <div>
+            <label for="movementSku" class="mb-2 block text-sm font-bold">SKU</label>
+            <div class="flex gap-2">
+              <div class="relative min-w-0 flex-1">
+                <i data-lucide="barcode" class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></i>
+                <input id="movementSku" type="text" autocomplete="off" inputmode="text" placeholder="Masukkan SKU" class="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-base font-bold outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100">
+              </div>
+              <button id="movementScanButton" type="button" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white transition hover:bg-slate-800 active:scale-[.98]" aria-label="Scan SKU">
+                <i data-lucide="scan-barcode" class="h-5 w-5"></i>
+              </button>
+            </div>
+          </div>
 
+          <div>
+            <label for="movementQty" class="mb-2 block text-sm font-bold">Qty</label>
+            <input id="movementQty" type="number" min="1" step="1" inputmode="numeric" placeholder="Contoh: 2" class="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-base font-bold outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100">
+          </div>
+
+          <div id="movementFromWrapper">
+            <label for="movementFromLocation" class="mb-2 block text-sm font-bold">Lokasi Asal</label>
+            <input id="movementFromLocation" type="text" autocomplete="off" placeholder="Contoh: A-01-P10" class="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-base font-bold uppercase outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100">
+          </div>
+
+          <div id="movementToWrapper">
+            <label for="movementToLocation" class="mb-2 block text-sm font-bold">Lokasi Tujuan</label>
+            <input id="movementToLocation" type="text" autocomplete="off" placeholder="Contoh: B-01-P10" class="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-base font-bold uppercase outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100">
+          </div>
+
+          <div>
+            <label for="movementNik" class="mb-2 block text-sm font-bold">NIK</label>
+            <input id="movementNik" type="text" autocomplete="off" inputmode="numeric" readonly class="h-14 w-full rounded-2xl border border-slate-200 bg-slate-100 px-4 text-base font-bold text-slate-600 outline-none">
+          </div>
+
+          <div id="movementError" class="hidden rounded-2xl border border-red-200 bg-red-50 p-4">
+            <div class="flex gap-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600"><i data-lucide="triangle-alert" class="h-5 w-5"></i></div>
+              <div><h3 class="text-sm font-black text-red-900">Movement gagal</h3><p id="movementErrorMessage" class="mt-1 text-sm text-red-700">-</p></div>
+            </div>
+          </div>
+
+          <button id="movementSubmitButton" type="submit" class="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 font-black text-white transition hover:bg-blue-700 active:scale-[.99] disabled:cursor-not-allowed disabled:opacity-60">
+            <i data-lucide="check" class="h-5 w-5"></i>
+            <span>Simpan Movement</span>
+          </button>
+        </form>
       </div>
 
+      <div id="movementSuccess" class="mt-4 hidden rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+        <div class="flex items-start gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600"><i data-lucide="circle-check" class="h-5 w-5"></i></div>
+          <div class="min-w-0">
+            <h3 class="text-sm font-black text-emerald-900">Movement berhasil</h3>
+            <p id="movementSuccessMessage" class="mt-1 text-sm text-emerald-700">-</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY PAGE -->
+    <section id="historyPage" class="mx-auto hidden max-w-5xl px-4 py-5 lg:px-8 lg:py-8">
+      <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <div class="flex items-start gap-3">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700"><i data-lucide="history" class="h-6 w-6"></i></div>
+          <div>
+            <h1 class="text-xl font-black">Riwayat</h1>
+            <p class="mt-1 text-sm text-slate-500">Halaman riwayat akan diaktifkan setelah endpoint history selesai.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white lg:hidden">
+    <div class="grid grid-cols-5">
+      <button type="button" class="mobile-nav mobile-nav-active" data-page="dashboard"><i data-lucide="house"></i><span>Home</span></button>
+      <button type="button" class="mobile-nav" data-page="search"><i data-lucide="search"></i><span>Cari</span></button>
+      <button type="button" class="mobile-nav" data-page="movement"><i data-lucide="arrow-left-right"></i><span>Movement</span></button>
+      <button type="button" class="mobile-nav" data-page="history"><i data-lucide="history"></i><span>History</span></button>
+      <button type="button" class="mobile-nav" data-page="dashboard"><i data-lucide="more-horizontal"></i><span>Menu</span></button>
     </div>
-
-  </div>
-
+  </nav>
 </div>
 
+<!-- CAMERA SCANNER MODAL -->
+<div id="scannerModal" class="fixed inset-0 z-[500] hidden bg-slate-950">
+  <div class="flex min-h-[100dvh] flex-col">
+    <div class="flex h-16 shrink-0 items-center justify-between px-4 text-white">
+      <div><p class="text-xs text-slate-400">Warehouse</p><h2 class="font-black">Scan Barcode</h2></div>
+      <button id="scannerCloseButton" type="button" class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white active:scale-95"><i data-lucide="x" class="h-6 w-6"></i></button>
+    </div>
+    <div class="flex flex-1 flex-col justify-center px-4 pb-8">
+      <div class="mx-auto w-full max-w-md overflow-hidden rounded-3xl bg-black ring-1 ring-white/10"><div id="cameraReader" class="w-full"></div></div>
+      <div class="mx-auto mt-5 w-full max-w-md text-center">
+        <div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-white"><span class="h-2 w-2 animate-pulse rounded-full bg-red-500"></span><span id="scannerStatus">Menyiapkan kamera...</span></div>
+        <p class="mx-auto mt-4 max-w-xs text-sm leading-6 text-slate-400">Arahkan barcode produk ke dalam area kamera. Pencarian atau pengisian SKU akan berjalan otomatis setelah barcode terbaca.</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- TOAST -->
+<div id="toast" class="pointer-events-none fixed left-1/2 top-5 z-[600] hidden w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-2xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white shadow-xl"></div>
 
-<div
-  id="toast"
-  class="
-    pointer-events-none
-    fixed
-    left-1/2
-    top-5
-    z-[600]
-    hidden
-    w-[calc(100%-2rem)]
-    max-w-sm
-    -translate-x-1/2
-    rounded-2xl
-    bg-slate-900
-    px-4
-    py-3
-    text-center
-    text-sm
-    font-semibold
-    text-white
-    shadow-xl
-  "
-></div>
-
-
-<!-- HTML5 QR/BARCODE SCANNER -->
-<script
-  src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"
-></script>
-
-<script src="./js/config.js?v=1"></script>
-<script src="./js/api.js?v=1"></script>
-<script src="./js/auth.js?v=1"></script>
-<script src="./js/scanner.js?v=1"></script>
-<script src="./js/app.js?v=3"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="./js/config.js?v=2"></script>
+<script src="./js/api.js?v=2"></script>
+<script src="./js/auth.js?v=2"></script>
+<script src="./js/scanner.js?v=2"></script>
+<script src="./js/app.js?v=4"></script>
 
 </body>
 </html>
