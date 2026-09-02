@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
+
+  <title>Warehouse Scanner</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- HTML5 QR / Barcode Scanner -->
+  <script
+    src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"
+  ></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#fff1f2',
+              100: '#ffe4e6',
+              500: '#ef4444',
+              600: '#dc2626',
+              700: '#b91c1c'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    html,
+    body {
+      min-height: 100%;
+      background: #020617;
+    }
+
+    body {
+      margin: 0;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+
+    #reader {
+      width: 100%;
+      overflow: hidden;
+      border-radius: 24px;
+      background: #000;
+    }
+
+    #reader video {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      border-radius: 24px;
+    }
+
+    #reader__scan_region {
+      background: transparent !important;
+    }
+
+    #reader__dashboard {
+      display: none !important;
+    }
+
+    #reader img {
+      display: none !important;
+    }
+
+    .scan-line {
+      animation: scanning 2s ease-in-out infinite;
+    }
+
+    @keyframes scanning {
+      0% {
+        top: 25%;
+      }
+
+      50% {
+        top: 70%;
+      }
+
+      100% {
+        top: 25%;
+      }
+    }
+
+    .safe-bottom {
+      padding-bottom: max(
+        20px,
+        env(safe-area-inset-bottom)
+      );
+    }
+  </style>
+</head>
+
+
+<body class="text-white">
+
+  <main
+    class="
+      min-h-screen
+      flex
+      flex-col
+      bg-slate-950
+    "
+  >
+
+    <!-- HEADER -->
+    <header
+      class="
+        flex
+        h-16
+        shrink-0
+        items-center
+        justify-between
+        border-b
+        border-white/10
+        bg-slate-950
+        px-4
+      "
+    >
+
+      <div class="flex items-center gap-3">
+
+        <div
+          class="
+            flex
+            h-10
+            w-10
+            items-center
+            justify-center
+            rounded-xl
+            bg-red-600
+          "
+        >
+          <i
+            data-lucide="scan-barcode"
+            class="h-5 w-5"
+          ></i>
+        </div>
+
+        <div>
+          <h1 class="font-bold">
+            Scan SKU
+          </h1>
+
+          <p class="text-xs text-slate-400">
+            Warehouse Scanner
+          </p>
+        </div>
+
+      </div>
+
+
+      <div
+        id="cameraStatus"
+        class="
+          flex
+          items-center
+          gap-2
+          rounded-full
+          bg-slate-800
+          px-3
+          py-1.5
+          text-xs
+          font-semibold
+          text-slate-300
+        "
+      >
+
+        <span
+          id="statusDot"
+          class="
+            h-2
+            w-2
+            rounded-full
+            bg-amber-400
+          "
+        ></span>
+
+        <span id="statusText">
+          Menyiapkan
+        </span>
+
+      </div>
+
+    </header>
+
+
+    <!-- CAMERA AREA -->
+    <section
+      class="
+        flex
+        flex-1
+        flex-col
+        px-4
+        pt-4
+      "
+    >
+
+      <div
+        class="
+          relative
+          mx-auto
+          w-full
+          max-w-lg
+        "
+      >
+
+        <!-- CAMERA -->
+        <div
+          id="reader"
+          class="
+            aspect-[3/4]
+            shadow-2xl
+          "
+        ></div>
+
+
+        <!-- CAMERA OVERLAY -->
+        <div
+          id="scannerOverlay"
+          class="
+            pointer-events-none
+            absolute
+            inset-0
+            z-20
+            overflow-hidden
+            rounded-3xl
+          "
+        >
+
+          <!-- dark areas -->
+
+          <div
+            class="
+              absolute
+              inset-x-0
+              top-0
+              h-[29%]
+              bg-black/30
+            "
+          ></div>
+
+          <div
+            class="
+              absolute
+              inset-x-0
+              bottom-0
+              h-[29%]
+              bg-black/30
+            "
+          ></div>
+
+          <div
+            class="
+              absolute
+              bottom-[29%]
+              left-0
+              top-[29%]
+              w-[8%]
+              bg-black/30
+            "
+          ></div>
+
+          <div
+            class="
+              absolute
+              bottom-[29%]
+              right-0
+              top-[29%]
+              w-[8%]
+              bg-black/30
+            "
+          ></div>
+
+
+          <!-- SCAN BOX -->
+          <div
+            class="
+              absolute
+              left-[8%]
+              right-[8%]
+              top-[29%]
+              h-[42%]
+              rounded-2xl
+              border-2
+              border-white/80
+            "
+          >
+
+            <!-- corners -->
+
+            <div
+              class="
+                absolute
+                -left-0.5
+                -top-0.5
+                h-10
+                w-10
+                rounded-tl-2xl
+                border-l-4
+                border-t-4
+                border-red-500
+              "
+            ></div>
+
+            <div
+              class="
+                absolute
+                -right-0.5
+                -top-0.5
+                h-10
+                w-10
+                rounded-tr-2xl
+                border-r-4
+                border-t-4
+                border-red-500
+              "
+            ></div>
+
+            <div
+              class="
+                absolute
+                -bottom-0.5
+                -left-0.5
+                h-10
+                w-10
+                rounded-bl-2xl
+                border-b-4
+                border-l-4
+                border-red-500
+              "
+            ></div>
+
+            <div
+              class="
+                absolute
+                -bottom-0.5
+                -right-0.5
+                h-10
+                w-10
+                rounded-br-2xl
+                border-b-4
+                border-r-4
+                border-red-500
+              "
+            ></div>
+
+
+            <!-- animated line -->
+
+            <div
+              class="
+                scan-line
+                absolute
+                left-4
+                right-4
+                h-0.5
+                bg-red-500
+                shadow-[0_0_12px_rgba(239,68,68,.9)]
+              "
+            ></div>
+
+          </div>
+
+        </div>
+
+
+        <!-- START OVERLAY -->
+        <div
+          id="startOverlay"
+          class="
+            absolute
+            inset-0
+            z-30
+            flex
+            items-center
+            justify-center
+            rounded-3xl
+            bg-slate-950
+          "
+        >
+
+          <div
+            class="
+              max-w-xs
+              px-6
+              text-center
+            "
+          >
+
+            <div
+              class="
+                mx-auto
+                mb-5
+                flex
+                h-16
+                w-16
+                items-center
+                justify-center
+                rounded-3xl
+                bg-red-600
+                text-white
+              "
+            >
+
+              <i
+                data-lucide="camera"
+                class="h-8 w-8"
+              ></i>
+
+            </div>
+
+
+            <h2
+              class="
+                text-xl
+                font-bold
+              "
+            >
+              Kamera Scanner
+            </h2>
+
+
+            <p
+              class="
+                mt-2
+                text-sm
+                leading-6
+                text-slate-400
+              "
+            >
+              Gunakan kamera belakang dan arahkan
+              barcode produk ke area scanner.
+            </p>
+
+
+            <button
+              id="startButton"
+              type="button"
+              class="
+                mt-6
+                flex
+                h-14
+                w-full
+                items-center
+                justify-center
+                gap-2
+                rounded-2xl
+                bg-red-600
+                px-6
+                font-bold
+                text-white
+                transition
+                active:scale-[.98]
+              "
+            >
+
+              <i
+                data-lucide="scan-barcode"
+                class="h-5 w-5"
+              ></i>
+
+              Mulai Scanner
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- INSTRUCTION -->
+      <div
+        id="instruction"
+        class="
+          mx-auto
+          mt-5
+          w-full
+          max-w-lg
+          text-center
+        "
+      >
+
+        <p class="font-semibold">
+          Arahkan barcode ke dalam kotak
+        </p>
+
+        <p
+          class="
+            mt-1
+            text-sm
+            text-slate-400
+          "
+        >
+          Scanner akan membaca barcode secara otomatis.
+        </p>
+
+      </div>
+
+
+      <!-- RESULT -->
+      <div
+        id="resultCard"
+        class="
+          mx-auto
+          mt-5
+          hidden
+          w-full
+          max-w-lg
+          rounded-3xl
+          bg-emerald-500/10
+          p-5
+          ring-1
+          ring-emerald-500/30
+        "
+      >
+
+        <div
+          class="
+            flex
+            items-start
+            gap-4
+          "
+        >
+
+          <div
+            class="
+              flex
+              h-12
+              w-12
+              shrink-0
+              items-center
+              justify-center
+              rounded-2xl
+              bg-emerald-500
+              text-white
+            "
+          >
+
+            <i
+              data-lucide="check"
+              class="h-6 w-6"
+            ></i>
+
+          </div>
+
+
+          <div class="min-w-0">
+
+            <p
+              class="
+                text-xs
+                font-bold
+                uppercase
+                tracking-wider
+                text-emerald-400
+              "
+            >
+              SKU terbaca
+            </p>
+
+            <h3
+              id="scanResult"
+              class="
+                mt-1
+                break-all
+                text-2xl
+                font-black
+                text-white
+              "
+            >
+              -
+            </h3>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+    <footer
+      class="
+        safe-bottom
+        mt-6
+        shrink-0
+        px-4
+        pt-3
+      "
+    >
+
+      <div
+        class="
+          mx-auto
+          flex
+          max-w-lg
+          gap-3
+        "
+      >
+
+        <button
+          id="restartButton"
+          type="button"
+          class="
+            hidden
+            h-14
+            flex-1
+            items-center
+            justify-center
+            gap-2
+            rounded-2xl
+            bg-red-600
+            font-bold
+            text-white
+            active:scale-[.98]
+          "
+        >
+
+          <i
+            data-lucide="scan-barcode"
+            class="h-5 w-5"
+          ></i>
+
+          Scan Lagi
+
+        </button>
+
+      </div>
+
+    </footer>
+
+  </main>
+
+
+  <!-- TOAST -->
+  <div
+    id="toast"
+    class="
+      fixed
+      left-1/2
+      top-5
+      z-[100]
+      hidden
+      w-[calc(100%-2rem)]
+      max-w-sm
+      -translate-x-1/2
+      rounded-2xl
+      bg-white
+      px-4
+      py-3
+      text-center
+      text-sm
+      font-semibold
+      text-slate-900
+      shadow-xl
+    "
+  ></div>
+
+
+  <script>
+
+    const ScannerState = {
+      scanner: null,
+      running: false,
+      detected: false
+    };
+
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      initScannerPage
+    );
+
+
+    function initScannerPage() {
+
+      lucide.createIcons();
+
+      document
+        .getElementById('startButton')
+        .addEventListener(
+          'click',
+          startScanner
+        );
+
+
+      document
+        .getElementById('restartButton')
+        .addEventListener(
+          'click',
+          restartScanner
+        );
+
+    }
+
+
+    /* =====================================
+       START SCANNER
+    ===================================== */
+
+    async function startScanner() {
+
+      if (ScannerState.running) {
+        return;
+      }
+
+
+      const startButton =
+        document.getElementById(
+          'startButton'
+        );
+
+
+      startButton.disabled = true;
+
+      startButton.innerHTML = `
+        <div
+          class="
+            h-5
+            w-5
+            animate-spin
+            rounded-full
+            border-2
+            border-white/40
+            border-t-white
+          "
+        ></div>
+
+        Membuka kamera...
+      `;
+
+
+      try {
+
+        ScannerState.detected = false;
+
+
+        if (!ScannerState.scanner) {
+
+          ScannerState.scanner =
+            new Html5Qrcode(
+              'reader'
+            );
+
+        }
+
+
+        await ScannerState.scanner.start(
+
+          {
+            facingMode: {
+              exact: 'environment'
+            }
+          },
+
+          {
+            fps: 15,
+
+            qrbox: function(
+              viewfinderWidth,
+              viewfinderHeight
+            ) {
+
+              const width =
+                Math.floor(
+                  viewfinderWidth * 0.84
+                );
+
+              const height =
+                Math.floor(
+                  width * 0.45
+                );
+
+
+              return {
+                width,
+                height
+              };
+
+            },
+
+            aspectRatio: 1.333333,
+
+            disableFlip: false
+          },
+
+          onScanSuccess,
+
+          onScanFailure
+
+        );
+
+
+        ScannerState.running = true;
+
+
+        document
+          .getElementById(
+            'startOverlay'
+          )
+          .classList.add(
+            'hidden'
+          );
+
+
+        setCameraStatus(
+          true,
+          'Scanner aktif'
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          'Camera error:',
+          error
+        );
+
+
+        /*
+         * Beberapa HP tidak menerima
+         * exact environment.
+         * Coba fallback.
+         */
+
+        try {
+
+          await ScannerState.scanner.start(
+
+            {
+              facingMode:
+                'environment'
+            },
+
+            {
+              fps: 15,
+
+              qrbox: {
+                width: 280,
+                height: 140
+              },
+
+              disableFlip: false
+            },
+
+            onScanSuccess,
+
+            onScanFailure
+
+          );
+
+
+          ScannerState.running = true;
+
+
+          document
+            .getElementById(
+              'startOverlay'
+            )
+            .classList.add(
+              'hidden'
+            );
+
+
+          setCameraStatus(
+            true,
+            'Scanner aktif'
+          );
+
+
+        } catch (
+          fallbackError
+        ) {
+
+          console.error(
+            fallbackError
+          );
+
+
+          setCameraStatus(
+            false,
+            'Kamera gagal'
+          );
+
+
+          showToast(
+            'Kamera tidak dapat dibuka. Pastikan izin kamera diberikan.'
+          );
+
+        }
+
+      } finally {
+
+        startButton.disabled =
+          false;
+
+
+        startButton.innerHTML = `
+
+          <i
+            data-lucide="scan-barcode"
+            class="h-5 w-5"
+          ></i>
+
+          Mulai Scanner
+
+        `;
+
+
+        lucide.createIcons();
+
+      }
+
+    }
+
+
+    /* =====================================
+       SCAN SUCCESS
+    ===================================== */
+
+    async function onScanSuccess(
+      decodedText,
+      decodedResult
+    ) {
+
+      if (
+        ScannerState.detected
+      ) {
+        return;
+      }
+
+
+      ScannerState.detected =
+        true;
+
+
+      const sku =
+        String(
+          decodedText ||
+          ''
+        )
+          .trim()
+          .replace(
+            /[\r\n\t]/g,
+            ''
+          );
+
+
+      if (!sku) {
+
+        ScannerState.detected =
+          false;
+
+        return;
+
+      }
+
+
+      /*
+       * vibration feedback
+       */
+      if (
+        navigator.vibrate
+      ) {
+
+        navigator.vibrate(
+          120
+        );
+
+      }
+
+
+      /*
+       * Stop camera.
+       */
+      await stopScanner();
+
+
+      /*
+       * Show result.
+       */
+      document
+        .getElementById(
+          'scanResult'
+        )
+        .textContent =
+          sku;
+
+
+      document
+        .getElementById(
+          'resultCard'
+        )
+        .classList.remove(
+          'hidden'
+        );
+
+
+      const restartButton =
+        document.getElementById(
+          'restartButton'
+        );
+
+
+      restartButton.classList.remove(
+        'hidden'
+      );
+
+      restartButton.classList.add(
+        'flex'
+      );
+
+
+      document
+        .getElementById(
+          'instruction'
+        )
+        .classList.add(
+          'hidden'
+        );
+
+
+      setCameraStatus(
+        false,
+        'Berhasil'
+      );
+
+
+      showToast(
+        `SKU terbaca: ${sku}`
+      );
+
+
+      lucide.createIcons();
+
+
+      /*
+       * Untuk tahap pertama
+       * kita hanya test scanner.
+       *
+       * Nanti bagian ini akan kita ubah:
+       *
+       * window.location.href =
+       *   APPS_SCRIPT_URL +
+       *   '?sku=' +
+       *   encodeURIComponent(sku);
+       */
+
+    }
+
+
+    /* =====================================
+       SCAN FAILURE
+    ===================================== */
+
+    function onScanFailure(
+      error
+    ) {
+
+      /*
+       * Normal.
+       *
+       * html5-qrcode memanggil fungsi
+       * ini berkali-kali selama barcode
+       * belum ditemukan.
+       *
+       * Jangan console.log di sini agar
+       * browser tetap ringan.
+       */
+
+    }
+
+
+    /* =====================================
+       STOP SCANNER
+    ===================================== */
+
+    async function stopScanner() {
+
+      if (
+        !ScannerState.scanner ||
+        !ScannerState.running
+      ) {
+
+        return;
+
+      }
+
+
+      try {
+
+        await ScannerState
+          .scanner
+          .stop();
+
+
+        ScannerState.running =
+          false;
+
+
+      } catch (error) {
+
+        console.warn(
+          'Stop scanner:',
+          error
+        );
+
+      }
+
+    }
+
+
+    /* =====================================
+       RESTART
+    ===================================== */
+
+    async function restartScanner() {
+
+      document
+        .getElementById(
+          'resultCard'
+        )
+        .classList.add(
+          'hidden'
+        );
+
+
+      const restartButton =
+        document.getElementById(
+          'restartButton'
+        );
+
+
+      restartButton.classList.add(
+        'hidden'
+      );
+
+      restartButton.classList.remove(
+        'flex'
+      );
+
+
+      document
+        .getElementById(
+          'instruction'
+        )
+        .classList.remove(
+          'hidden'
+        );
+
+
+      ScannerState.detected =
+        false;
+
+
+      await startScanner();
+
+    }
+
+
+    /* =====================================
+       STATUS
+    ===================================== */
+
+    function setCameraStatus(
+      active,
+      text
+    ) {
+
+      const dot =
+        document.getElementById(
+          'statusDot'
+        );
+
+
+      const status =
+        document.getElementById(
+          'statusText'
+        );
+
+
+      status.textContent =
+        text;
+
+
+      dot.className =
+        active
+          ? 'h-2 w-2 rounded-full bg-emerald-400'
+          : 'h-2 w-2 rounded-full bg-amber-400';
+
+    }
+
+
+    /* =====================================
+       TOAST
+    ===================================== */
+
+    function showToast(
+      message
+    ) {
+
+      const toast =
+        document.getElementById(
+          'toast'
+        );
+
+
+      toast.textContent =
+        message;
+
+
+      toast.classList.remove(
+        'hidden'
+      );
+
+
+      clearTimeout(
+        window.__toastTimer
+      );
+
+
+      window.__toastTimer =
+        setTimeout(
+          () => {
+
+            toast.classList.add(
+              'hidden'
+            );
+
+          },
+          2500
+        );
+
+    }
+
+
+    /* =====================================
+       PAGE CLOSE
+    ===================================== */
+
+    window.addEventListener(
+      'beforeunload',
+      () => {
+
+        if (
+          ScannerState.scanner &&
+          ScannerState.running
+        ) {
+
+          ScannerState
+            .scanner
+            .stop()
+            .catch(() => {});
+
+        }
+
+      }
+    );
+
+  </script>
+
+</body>
+
+</html>
