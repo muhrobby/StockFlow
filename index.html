@@ -125,8 +125,6 @@
 
   <div class="w-full max-w-sm">
 
-    <!-- BRAND -->
-
     <div class="mb-8 text-center">
 
       <div
@@ -151,11 +149,9 @@
         ></i>
       </div>
 
-
       <h1 class="text-2xl font-black">
         Warehouse App
       </h1>
-
 
       <p class="mt-2 text-sm text-slate-500">
         Masukkan NIK untuk melanjutkan
@@ -163,8 +159,6 @@
 
     </div>
 
-
-    <!-- FORM -->
 
     <form
       id="loginForm"
@@ -180,12 +174,7 @@
 
       <label
         for="nikInput"
-        class="
-          mb-2
-          block
-          text-sm
-          font-semibold
-        "
+        class="mb-2 block text-sm font-semibold"
       >
         NIK
       </label>
@@ -268,8 +257,8 @@
           text-white
           shadow-sm
           transition
-          active:scale-[.98]
           hover:bg-red-700
+          active:scale-[.98]
           disabled:cursor-not-allowed
           disabled:opacity-60
         "
@@ -369,7 +358,9 @@
     <nav class="flex-1 space-y-2 p-4">
 
       <button
+        type="button"
         class="desktop-nav desktop-nav-active"
+        data-page="dashboard"
       >
         <i data-lucide="house"></i>
         Dashboard
@@ -377,8 +368,9 @@
 
 
       <button
-        class="desktop-nav desktop-nav-disabled"
-        disabled
+        type="button"
+        class="desktop-nav"
+        data-page="search"
       >
         <i data-lucide="search"></i>
         Cari Barang
@@ -500,6 +492,7 @@
         <div>
 
           <p
+            id="headerPageLabel"
             class="
               text-xs
               font-medium
@@ -510,12 +503,35 @@
           </p>
 
           <h2
-            id="headerUserName"
+            id="headerTitle"
             class="font-black"
           >
-            PIC
+            Dashboard
           </h2>
 
+        </div>
+
+
+        <div
+          class="
+            hidden
+            text-right
+            lg:block
+          "
+        >
+          <p
+            id="headerUserName"
+            class="text-sm font-bold"
+          >
+            PIC
+          </p>
+
+          <p
+            id="headerUserNik"
+            class="text-xs text-slate-400"
+          >
+            -
+          </p>
         </div>
 
 
@@ -546,9 +562,12 @@
     </header>
 
 
-    <!-- DASHBOARD -->
+    <!-- =====================================
+         DASHBOARD PAGE
+    ====================================== -->
 
     <section
+      id="dashboardPage"
       class="
         mx-auto
         max-w-5xl
@@ -558,8 +577,6 @@
         lg:py-8
       "
     >
-
-      <!-- USER CARD -->
 
       <div
         class="
@@ -674,28 +691,18 @@
       </div>
 
 
-      <!-- TITLE -->
-
       <div class="mb-4 mt-7">
 
-        <h2
-          class="
-            text-lg
-            font-black
-            lg:text-xl
-          "
-        >
+        <h2 class="text-lg font-black lg:text-xl">
           Menu
         </h2>
 
         <p class="mt-1 text-sm text-slate-500">
-          Fitur warehouse akan kita aktifkan bertahap.
+          Pilih aktivitas warehouse.
         </p>
 
       </div>
 
-
-      <!-- MENU CARDS -->
 
       <div
         class="
@@ -710,11 +717,14 @@
         <!-- SEARCH -->
 
         <button
+          id="dashboardSearchButton"
           type="button"
-          disabled
           class="
             dashboard-menu
-            opacity-50
+            transition
+            hover:border-red-200
+            hover:shadow-md
+            active:scale-[.98]
           "
         >
 
@@ -735,7 +745,7 @@
             </h3>
 
             <p class="mt-1 text-xs text-slate-400">
-              Tahap berikutnya
+              Cari SKU dan lokasi
             </p>
 
           </div>
@@ -852,16 +862,239 @@
 
       </div>
 
+    </section>
 
-      <!-- STATUS -->
+
+    <!-- =====================================
+         SEARCH PAGE
+    ====================================== -->
+
+    <section
+      id="searchPage"
+      class="
+        mx-auto
+        hidden
+        max-w-5xl
+        px-4
+        py-5
+        lg:px-8
+        lg:py-8
+      "
+    >
+
+      <!-- SEARCH FORM -->
 
       <div
         class="
-          mt-7
+          rounded-3xl
+          bg-white
+          p-5
+          shadow-sm
+          ring-1
+          ring-slate-200
+          lg:p-6
+        "
+      >
+
+        <div
+          class="
+            mb-5
+            flex
+            items-start
+            gap-3
+          "
+        >
+
+          <div
+            class="
+              flex
+              h-12
+              w-12
+              shrink-0
+              items-center
+              justify-center
+              rounded-2xl
+              bg-red-50
+              text-red-600
+            "
+          >
+            <i
+              data-lucide="package-search"
+              class="h-6 w-6"
+            ></i>
+          </div>
+
+          <div>
+
+            <h1 class="text-xl font-black">
+              Cari Barang
+            </h1>
+
+            <p
+              class="
+                mt-1
+                text-sm
+                leading-5
+                text-slate-500
+              "
+            >
+              Masukkan SKU untuk melihat lokasi dan jumlah stock.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <form
+          id="searchForm"
+          class="space-y-3"
+        >
+
+          <label
+            for="skuInput"
+            class="block text-sm font-bold"
+          >
+            SKU
+          </label>
+
+
+          <div
+            class="
+              flex
+              gap-2
+            "
+          >
+
+            <div class="relative min-w-0 flex-1">
+
+              <i
+                data-lucide="scan-barcode"
+                class="
+                  absolute
+                  left-4
+                  top-1/2
+                  h-5
+                  w-5
+                  -translate-y-1/2
+                  text-slate-400
+                "
+              ></i>
+
+
+              <input
+                id="skuInput"
+                type="text"
+                autocomplete="off"
+                placeholder="Contoh: 100001"
+                class="
+                  h-14
+                  w-full
+                  rounded-2xl
+                  border
+                  border-slate-200
+                  bg-slate-50
+                  pl-12
+                  pr-4
+                  text-base
+                  font-bold
+                  outline-none
+                  transition
+                  focus:border-red-500
+                  focus:bg-white
+                  focus:ring-4
+                  focus:ring-red-100
+                "
+              >
+
+            </div>
+
+
+            <button
+              id="searchButton"
+              type="submit"
+              class="
+                flex
+                h-14
+                shrink-0
+                items-center
+                justify-center
+                gap-2
+                rounded-2xl
+                bg-red-600
+                px-5
+                font-bold
+                text-white
+                transition
+                hover:bg-red-700
+                active:scale-[.98]
+                disabled:cursor-not-allowed
+                disabled:opacity-60
+              "
+            >
+
+              <i
+                data-lucide="search"
+                class="h-5 w-5"
+              ></i>
+
+              <span class="hidden sm:inline">
+                Cari
+              </span>
+
+            </button>
+
+          </div>
+
+        </form>
+
+
+        <!-- SCANNER PLACEHOLDER -->
+
+        <button
+          type="button"
+          disabled
+          class="
+            mt-3
+            flex
+            h-12
+            w-full
+            items-center
+            justify-center
+            gap-2
+            rounded-2xl
+            border
+            border-dashed
+            border-slate-300
+            text-sm
+            font-bold
+            text-slate-400
+          "
+        >
+
+          <i
+            data-lucide="camera"
+            class="h-5 w-5"
+          ></i>
+
+          Scan Kamera — tahap berikutnya
+
+        </button>
+
+      </div>
+
+
+      <!-- ERROR -->
+
+      <div
+        id="searchError"
+        class="
+          mt-4
+          hidden
           rounded-2xl
           border
-          border-emerald-200
-          bg-emerald-50
+          border-red-200
+          bg-red-50
           p-4
         "
       >
@@ -877,12 +1110,12 @@
               items-center
               justify-center
               rounded-xl
-              bg-emerald-100
-              text-emerald-600
+              bg-red-100
+              text-red-600
             "
           >
             <i
-              data-lucide="circle-check"
+              data-lucide="triangle-alert"
               class="h-5 w-5"
             ></i>
           </div>
@@ -894,25 +1127,210 @@
               class="
                 text-sm
                 font-black
-                text-emerald-900
+                text-red-900
               "
             >
-              Login berhasil
+              Barang tidak ditemukan
             </h3>
 
             <p
+              id="searchErrorMessage"
               class="
                 mt-1
-                text-xs
-                leading-5
-                text-emerald-700
+                text-sm
+                text-red-700
               "
             >
-              Frontend GitHub Pages sudah terhubung
-              dengan backend n8n.
+              -
             </p>
 
           </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- SEARCH RESULT -->
+
+      <div
+        id="searchResult"
+        class="mt-4 hidden"
+      >
+
+
+        <!-- PRODUCT -->
+
+        <div
+          class="
+            overflow-hidden
+            rounded-3xl
+            bg-slate-900
+            p-5
+            text-white
+            shadow-sm
+            lg:p-6
+          "
+        >
+
+          <div
+            class="
+              flex
+              items-start
+              justify-between
+              gap-4
+            "
+          >
+
+            <div class="min-w-0">
+
+              <p
+                id="resultSku"
+                class="
+                  text-sm
+                  font-bold
+                  text-red-400
+                "
+              >
+                SKU -
+              </p>
+
+
+              <h2
+                id="resultDescription"
+                class="
+                  mt-1
+                  text-xl
+                  font-black
+                  leading-tight
+                  lg:text-2xl
+                "
+              >
+                -
+              </h2>
+
+            </div>
+
+
+            <div
+              class="
+                flex
+                h-12
+                w-12
+                shrink-0
+                items-center
+                justify-center
+                rounded-2xl
+                bg-white/10
+              "
+            >
+              <i
+                data-lucide="package"
+                class="h-6 w-6"
+              ></i>
+            </div>
+
+          </div>
+
+
+          <div
+            class="
+              mt-5
+              rounded-2xl
+              bg-white/10
+              p-4
+            "
+          >
+
+            <p
+              class="
+                text-xs
+                font-medium
+                uppercase
+                tracking-wide
+                text-slate-400
+              "
+            >
+              Total Stock
+            </p>
+
+
+            <div
+              class="
+                mt-1
+                flex
+                items-end
+                gap-2
+              "
+            >
+
+              <span
+                id="resultTotalStock"
+                class="
+                  text-4xl
+                  font-black
+                "
+              >
+                0
+              </span>
+
+              <span
+                class="
+                  pb-1
+                  text-sm
+                  font-medium
+                  text-slate-400
+                "
+              >
+                pcs
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- LOCATIONS -->
+
+        <div class="mt-5">
+
+          <div
+            class="
+              mb-3
+              flex
+              items-center
+              justify-between
+            "
+          >
+
+            <div>
+
+              <h3 class="font-black">
+                Lokasi Stock
+              </h3>
+
+              <p
+                id="locationCount"
+                class="
+                  mt-0.5
+                  text-xs
+                  text-slate-400
+                "
+              >
+                -
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div
+            id="locationList"
+            class="space-y-3"
+          ></div>
 
         </div>
 
@@ -945,10 +1363,12 @@
     <div class="grid grid-cols-5">
 
       <button
+        type="button"
         class="
           mobile-nav
           mobile-nav-active
         "
+        data-page="dashboard"
       >
         <i data-lucide="house"></i>
         <span>Home</span>
@@ -956,11 +1376,9 @@
 
 
       <button
-        disabled
-        class="
-          mobile-nav
-          opacity-40
-        "
+        type="button"
+        class="mobile-nav"
+        data-page="search"
       >
         <i data-lucide="search"></i>
         <span>Cari</span>
@@ -1037,10 +1455,6 @@
   "
 ></div>
 
-
-<!-- =========================================
-     JAVASCRIPT
-========================================= -->
 
 <script src="./js/config.js"></script>
 <script src="./js/api.js"></script>
