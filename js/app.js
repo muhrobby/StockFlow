@@ -2,13 +2,17 @@ const AppState = {
 
   user: null,
 
-  currentPage: 'dashboard',
+  currentPage:
+    'dashboard',
 
-  loginLoading: false,
+  loginLoading:
+    false,
 
-  searchLoading: false,
+  searchLoading:
+    false,
 
-  lastSearch: null
+  lastSearch:
+    null
 
 };
 
@@ -27,7 +31,12 @@ function initApp() {
 
   lucide.createIcons();
 
+
+  Scanner.init();
+
+
   bindEvents();
+
 
   bootstrap();
 
@@ -41,7 +50,9 @@ function initApp() {
 function bindEvents() {
 
   document
-    .getElementById('loginForm')
+    .getElementById(
+      'loginForm'
+    )
     .addEventListener(
       'submit',
       handleLogin
@@ -49,10 +60,22 @@ function bindEvents() {
 
 
   document
-    .getElementById('searchForm')
+    .getElementById(
+      'searchForm'
+    )
     .addEventListener(
       'submit',
       handleSearch
+    );
+
+
+  document
+    .getElementById(
+      'scanCameraButton'
+    )
+    .addEventListener(
+      'click',
+      handleOpenScanner
     );
 
 
@@ -83,7 +106,11 @@ function bindEvents() {
     .addEventListener(
       'click',
       () => {
-        navigateTo('search');
+
+        navigateTo(
+          'search'
+        );
+
       }
     );
 
@@ -92,21 +119,22 @@ function bindEvents() {
     .querySelectorAll(
       '[data-page]'
     )
-    .forEach(button => {
+    .forEach(
+      button => {
 
-      button.addEventListener(
-        'click',
-        () => {
+        button.addEventListener(
+          'click',
+          () => {
 
-          const page =
-            button.dataset.page;
+            navigateTo(
+              button.dataset.page
+            );
 
-          navigateTo(page);
+          }
+        );
 
-        }
-      );
-
-    });
+      }
+    );
 
 }
 
@@ -132,9 +160,11 @@ function bootstrap() {
 
     showApp();
 
+
     navigateTo(
       'dashboard'
     );
+
 
     return;
 
@@ -171,11 +201,9 @@ async function handleLogin(
 
 
   const nik =
-    String(
-      nikInput.value || ''
-    )
-      .trim()
-      .replace(/\s+/g, '');
+    normalizeValue(
+      nikInput.value
+    );
 
 
   hideLoginError();
@@ -221,9 +249,7 @@ async function handleLogin(
     }
 
 
-    if (
-      !result.user
-    ) {
+    if (!result.user) {
 
       throw new Error(
         'Data user tidak ditemukan.'
@@ -286,7 +312,7 @@ async function handleLogin(
 
 
 /* =========================================
-   SEARCH
+   MANUAL SEARCH
 ========================================= */
 
 async function handleSearch(
@@ -296,13 +322,6 @@ async function handleSearch(
   event.preventDefault();
 
 
-  if (
-    AppState.searchLoading
-  ) {
-    return;
-  }
-
-
   const skuInput =
     document.getElementById(
       'skuInput'
@@ -310,17 +329,15 @@ async function handleSearch(
 
 
   const sku =
-    String(
-      skuInput.value || ''
-    )
-      .trim()
-      .replace(/\s+/g, '');
-
-
-  hideSearchError();
+    normalizeValue(
+      skuInput.value
+    );
 
 
   if (!sku) {
+
+    clearSearchResult();
+
 
     showSearchError(
       'Masukkan SKU terlebih dahulu.'
@@ -332,6 +349,113 @@ async function handleSearch(
     return;
 
   }
+
+
+  await executeSearch(
+    sku
+  );
+
+}
+
+
+/* =========================================
+   CAMERA SCANNER
+========================================= */
+
+async function handleOpenScanner() {
+
+  if (
+    AppState.searchLoading
+  ) {
+    return;
+  }
+
+
+  hideSearchError();
+
+
+  try {
+
+    await Scanner.open(
+      async decodedText => {
+
+        const sku =
+          normalizeValue(
+            decodedText
+          );
+
+
+        if (!sku) {
+
+          showSearchError(
+            'Barcode tidak menghasilkan SKU yang valid.'
+          );
+
+          return;
+
+        }
+
+
+        const skuInput =
+          document.getElementById(
+            'skuInput'
+          );
+
+
+        skuInput.value =
+          sku;
+
+
+        showToast(
+          `SKU terbaca: ${sku}`
+        );
+
+
+        await executeSearch(
+          sku
+        );
+
+      }
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      'Scanner error:',
+      error
+    );
+
+
+    showSearchError(
+      error.message ||
+      'Kamera tidak dapat dibuka.'
+    );
+
+  }
+
+}
+
+
+/* =========================================
+   EXECUTE SEARCH
+========================================= */
+
+async function executeSearch(
+  sku
+) {
+
+  if (
+    AppState.searchLoading
+  ) {
+    return;
+  }
+
+
+  hideSearchError();
+
+
+  clearSearchResult();
 
 
   setSearchLoading(
@@ -363,9 +487,7 @@ async function handleSearch(
     }
 
 
-    if (
-      !result.item
-    ) {
+    if (!result.item) {
 
       throw new Error(
         'Response barang tidak valid.'
@@ -503,6 +625,10 @@ function renderSearchResult(
 }
 
 
+/* =========================================
+   LOCATIONS
+========================================= */
+
 function renderLocations(
   locations
 ) {
@@ -589,6 +715,7 @@ function renderLocations(
 
     lucide.createIcons();
 
+
     return;
 
   }
@@ -615,25 +742,29 @@ function renderLocations(
 
       const locationCode =
         escapeHtml(
-          location.location_code || '-'
+          location.location_code ||
+          '-'
         );
 
 
       const zone =
         escapeHtml(
-          location.zone || '-'
+          location.zone ||
+          '-'
         );
 
 
       const section =
         escapeHtml(
-          location.section || '-'
+          location.section ||
+          '-'
         );
 
 
       const position =
         escapeHtml(
-          location.position || '-'
+          location.position ||
+          '-'
         );
 
 
@@ -696,6 +827,7 @@ function renderLocations(
                 ${locationCode}
               </h3>
 
+
               <div
                 class="
                   mt-2
@@ -719,6 +851,7 @@ function renderLocations(
                   Zone ${zone}
                 </span>
 
+
                 <span
                   class="
                     rounded-lg
@@ -732,6 +865,7 @@ function renderLocations(
                 >
                   Section ${section}
                 </span>
+
 
                 <span
                   class="
@@ -801,6 +935,10 @@ function renderLocations(
 }
 
 
+/* =========================================
+   CLEAR RESULT
+========================================= */
+
 function clearSearchResult() {
 
   AppState.lastSearch =
@@ -844,6 +982,12 @@ function setSearchLoading(
     );
 
 
+  const scanButton =
+    document.getElementById(
+      'scanCameraButton'
+    );
+
+
   const input =
     document.getElementById(
       'skuInput'
@@ -851,6 +995,10 @@ function setSearchLoading(
 
 
   button.disabled =
+    loading;
+
+
+  scanButton.disabled =
     loading;
 
 
@@ -929,6 +1077,20 @@ function navigateTo(
   }
 
 
+  /**
+   * Matikan kamera jika user
+   * meninggalkan halaman search.
+   */
+  if (
+    page !== 'search' &&
+    Scanner.isVisible()
+  ) {
+
+    Scanner.close();
+
+  }
+
+
   AppState.currentPage =
     page;
 
@@ -986,20 +1148,6 @@ function navigateTo(
       'Cari Barang'
     );
 
-
-    setTimeout(
-      () => {
-
-        document
-          .getElementById(
-            'skuInput'
-          )
-          .focus();
-
-      },
-      100
-    );
-
   }
 
 
@@ -1015,7 +1163,7 @@ function navigateTo(
 
 
 /* =========================================
-   NAVIGATION STATE
+   NAV STATE
 ========================================= */
 
 function updateNavigation() {
@@ -1092,7 +1240,7 @@ function setHeader(
 
 
 /* =========================================
-   LOGIN BUTTON
+   LOGIN LOADING
 ========================================= */
 
 function setLoginLoading(
@@ -1164,9 +1312,12 @@ function setLoginLoading(
 
 function showLogin() {
 
-  const bootPage =
-    document.getElementById(
-      'bootPage'
+  document
+    .getElementById(
+      'appPage'
+    )
+    .classList.add(
+      'hidden'
     );
 
 
@@ -1174,17 +1325,6 @@ function showLogin() {
     document.getElementById(
       'loginPage'
     );
-
-
-  const appPage =
-    document.getElementById(
-      'appPage'
-    );
-
-
-  appPage.classList.add(
-    'hidden'
-  );
 
 
   loginPage.classList.remove(
@@ -1197,9 +1337,13 @@ function showLogin() {
   );
 
 
-  bootPage.classList.add(
-    'hidden'
-  );
+  document
+    .getElementById(
+      'bootPage'
+    )
+    .classList.add(
+      'hidden'
+    );
 
 
   lucide.createIcons();
@@ -1223,21 +1367,9 @@ function showLogin() {
 
 function showApp() {
 
-  const bootPage =
-    document.getElementById(
-      'bootPage'
-    );
-
-
   const loginPage =
     document.getElementById(
       'loginPage'
-    );
-
-
-  const appPage =
-    document.getElementById(
-      'appPage'
     );
 
 
@@ -1251,17 +1383,25 @@ function showApp() {
   );
 
 
-  appPage.classList.remove(
-    'hidden'
-  );
+  document
+    .getElementById(
+      'appPage'
+    )
+    .classList.remove(
+      'hidden'
+    );
 
 
   renderUser();
 
 
-  bootPage.classList.add(
-    'hidden'
-  );
+  document
+    .getElementById(
+      'bootPage'
+    )
+    .classList.add(
+      'hidden'
+    );
 
 
   lucide.createIcons();
@@ -1339,7 +1479,10 @@ function renderUser() {
    LOGOUT
 ========================================= */
 
-function logout() {
+async function logout() {
+
+  await Scanner.close();
+
 
   Auth.clearSession();
 
@@ -1373,6 +1516,7 @@ function logout() {
 
 
   clearSearchResult();
+
 
   hideSearchError();
 
@@ -1445,14 +1589,12 @@ function showSearchError(
     );
 
 
-  const messageElement =
-    document.getElementById(
+  document
+    .getElementById(
       'searchErrorMessage'
-    );
-
-
-  messageElement.textContent =
-    message;
+    )
+    .textContent =
+      message;
 
 
   box.classList.remove(
@@ -1467,15 +1609,13 @@ function showSearchError(
 
 function hideSearchError() {
 
-  const box =
-    document.getElementById(
+  document
+    .getElementById(
       'searchError'
+    )
+    .classList.add(
+      'hidden'
     );
-
-
-  box.classList.add(
-    'hidden'
-  );
 
 
   document
@@ -1484,6 +1624,26 @@ function hideSearchError() {
     )
     .textContent =
       '';
+
+}
+
+
+/* =========================================
+   NORMALIZE
+========================================= */
+
+function normalizeValue(
+  value
+) {
+
+  return String(
+    value || ''
+  )
+    .trim()
+    .replace(
+      /\s+/g,
+      ''
+    );
 
 }
 
@@ -1501,9 +1661,13 @@ function formatNumber(
 
 
   if (
-    !Number.isFinite(number)
+    !Number.isFinite(
+      number
+    )
   ) {
+
     return '0';
+
   }
 
 
@@ -1517,14 +1681,16 @@ function formatNumber(
 
 
 /* =========================================
-   SECURITY
+   ESCAPE HTML
 ========================================= */
 
 function escapeHtml(
   value
 ) {
 
-  return String(value)
+  return String(
+    value
+  )
     .replaceAll(
       '&',
       '&amp;'
