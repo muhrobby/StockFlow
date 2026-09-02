@@ -20,6 +20,8 @@ function bindMovementEvents() {
   const form = document.getElementById('movementForm');
   const type = document.getElementById('movementType');
   const scanButton = document.getElementById('movementScanButton');
+  const fromScanButton = document.getElementById('movementFromScanButton');
+  const toScanButton = document.getElementById('movementToScanButton');
 
   if (form) {
     form.addEventListener('submit', handleMovementSubmit);
@@ -31,6 +33,14 @@ function bindMovementEvents() {
 
   if (scanButton) {
     scanButton.addEventListener('click', handleMovementScan);
+  }
+
+  if (fromScanButton) {
+    fromScanButton.addEventListener('click', () => handleLocationScan('movementFromLocation', 'Lokasi asal'));
+  }
+
+  if (toScanButton) {
+    toScanButton.addEventListener('click', () => handleLocationScan('movementToLocation', 'Lokasi tujuan'));
   }
 
   /*
@@ -123,6 +133,48 @@ async function handleMovementScan() {
   } catch (error) {
 
     console.error('Movement scanner error:', error);
+
+    showMovementError(
+      error.message || 'Kamera tidak dapat dibuka.'
+    );
+
+  }
+
+}
+
+
+async function handleLocationScan(inputId, label) {
+
+  if (MovementState.loading) {
+    return;
+  }
+
+  hideMovementError();
+
+  try {
+
+    await Scanner.open(async decodedText => {
+
+      const location = normalizeValue(decodedText);
+
+      if (!location) {
+        showMovementError('Barcode tidak menghasilkan lokasi yang valid.');
+        return;
+      }
+
+      const input = document.getElementById(inputId);
+
+      if (input) {
+        input.value = location.toUpperCase();
+      }
+
+      showToast(`${label} terbaca: ${location}`);
+
+    });
+
+  } catch (error) {
+
+    console.error('Location scanner error:', error);
 
     showMovementError(
       error.message || 'Kamera tidak dapat dibuka.'
@@ -267,6 +319,8 @@ function setMovementLoading(loading) {
 
   const button = document.getElementById('movementSubmitButton');
   const scanButton = document.getElementById('movementScanButton');
+  const fromScanButton = document.getElementById('movementFromScanButton');
+  const toScanButton = document.getElementById('movementToScanButton');
 
   if (!button) {
     return;
@@ -276,6 +330,14 @@ function setMovementLoading(loading) {
 
   if (scanButton) {
     scanButton.disabled = loading;
+  }
+
+  if (fromScanButton) {
+    fromScanButton.disabled = loading;
+  }
+
+  if (toScanButton) {
+    toScanButton.disabled = loading;
   }
 
   if (loading) {

@@ -1,657 +1,286 @@
 const AppState = {
-
   user: null,
 
-  currentPage:
-    'dashboard',
+  currentPage: "dashboard",
 
-  loginLoading:
-    false,
+  loginLoading: false,
 
-  searchLoading:
-    false,
+  searchLoading: false,
 
-  lastSearch:
-    null
-
+  lastSearch: null,
 };
-
 
 /* =========================================
    INIT
 ========================================= */
 
-document.addEventListener(
-  'DOMContentLoaded',
-  initApp
-);
-
+document.addEventListener("DOMContentLoaded", initApp);
 
 function initApp() {
-
   lucide.createIcons();
-
 
   Scanner.init();
 
-
   bindEvents();
 
-
   bootstrap();
-
 }
-
 
 /* =========================================
    EVENTS
 ========================================= */
 
 function bindEvents() {
+  document.getElementById("loginForm").addEventListener("submit", handleLogin);
 
   document
-    .getElementById(
-      'loginForm'
-    )
-    .addEventListener(
-      'submit',
-      handleLogin
-    );
-
+    .getElementById("searchForm")
+    .addEventListener("submit", handleSearch);
 
   document
-    .getElementById(
-      'searchForm'
-    )
-    .addEventListener(
-      'submit',
-      handleSearch
-    );
-
+    .getElementById("scanCameraButton")
+    .addEventListener("click", handleOpenScanner);
 
   document
-    .getElementById(
-      'scanCameraButton'
-    )
-    .addEventListener(
-      'click',
-      handleOpenScanner
-    );
-
+    .getElementById("desktopLogoutButton")
+    .addEventListener("click", logout);
 
   document
-    .getElementById(
-      'desktopLogoutButton'
-    )
-    .addEventListener(
-      'click',
-      logout
-    );
+    .getElementById("mobileLogoutButton")
+    .addEventListener("click", logout);
 
-
-  document
-    .getElementById(
-      'mobileLogoutButton'
-    )
-    .addEventListener(
-      'click',
-      logout
-    );
-
-
-  document
-    .getElementById(
-      'dashboardSearchButton'
-    )
-    .addEventListener(
-      'click',
-      () => {
-
-        navigateTo(
-          'search'
-        );
-
-      }
-    );
-
-
-  document
-    .querySelectorAll(
-      '[data-page]'
-    )
-    .forEach(
-      button => {
-
-        button.addEventListener(
-          'click',
-          () => {
-
-            navigateTo(
-              button.dataset.page
-            );
-
-          }
-        );
-
-      }
-    );
-
+  document.querySelectorAll("[data-page]").forEach((button) => {
+    button.addEventListener("click", () => {
+      navigateTo(button.dataset.page);
+    });
+  });
 }
-
 
 /* =========================================
    BOOTSTRAP
 ========================================= */
 
 function bootstrap() {
+  const session = Auth.getSession();
 
-  const session =
-    Auth.getSession();
-
-
-  if (
-    session &&
-    session.user
-  ) {
-
-    AppState.user =
-      session.user;
-
+  if (session && session.user) {
+    AppState.user = session.user;
 
     showApp();
 
-
-    navigateTo(
-      'dashboard'
-    );
-
+    navigateTo("dashboard");
 
     return;
-
   }
 
-
   showLogin();
-
 }
-
 
 /* =========================================
    LOGIN
 ========================================= */
 
-async function handleLogin(
-  event
-) {
-
+async function handleLogin(event) {
   event.preventDefault();
 
-
-  if (
-    AppState.loginLoading
-  ) {
+  if (AppState.loginLoading) {
     return;
   }
 
+  const nikInput = document.getElementById("nikInput");
 
-  const nikInput =
-    document.getElementById(
-      'nikInput'
-    );
-
-
-  const nik =
-    normalizeValue(
-      nikInput.value
-    );
-
+  const nik = normalizeValue(nikInput.value);
 
   hideLoginError();
 
-
   if (!nik) {
-
-    showLoginError(
-      'Masukkan NIK terlebih dahulu.'
-    );
-
+    showLoginError("Masukkan NIK terlebih dahulu.");
 
     nikInput.focus();
 
     return;
-
   }
 
-
-  setLoginLoading(
-    true
-  );
-
+  setLoginLoading(true);
 
   try {
+    const result = await Auth.login(nik);
 
-    const result =
-      await Auth.login(
-        nik
-      );
-
-
-    if (
-      !result ||
-      result.success !== true
-    ) {
-
-      throw new Error(
-        result?.message ||
-        'Login gagal.'
-      );
-
+    if (!result || result.success !== true) {
+      throw new Error(result?.message || "Login gagal.");
     }
-
 
     if (!result.user) {
-
-      throw new Error(
-        'Data user tidak ditemukan.'
-      );
-
+      throw new Error("Data user tidak ditemukan.");
     }
 
+    Auth.saveSession(result.user);
 
-    Auth.saveSession(
-      result.user
-    );
-
-
-    AppState.user =
-      result.user;
-
+    AppState.user = result.user;
 
     showApp();
 
+    navigateTo("dashboard");
 
-    navigateTo(
-      'dashboard'
-    );
-
-
-    showToast(
-      `Selamat datang, ${
-        result.user.nama ||
-        result.user.nik
-      }`
-    );
-
-
+    showToast(`Selamat datang, ${result.user.nama || result.user.nik}`);
   } catch (error) {
+    console.error("Login error:", error);
 
-    console.error(
-      'Login error:',
-      error
-    );
-
-
-    showLoginError(
-      error.message ||
-      'Terjadi kesalahan saat login.'
-    );
-
+    showLoginError(error.message || "Terjadi kesalahan saat login.");
 
     nikInput.focus();
-
-
   } finally {
-
-    setLoginLoading(
-      false
-    );
-
+    setLoginLoading(false);
   }
-
 }
-
 
 /* =========================================
    MANUAL SEARCH
 ========================================= */
 
-async function handleSearch(
-  event
-) {
-
+async function handleSearch(event) {
   event.preventDefault();
 
+  const skuInput = document.getElementById("skuInput");
 
-  const skuInput =
-    document.getElementById(
-      'skuInput'
-    );
-
-
-  const sku =
-    normalizeValue(
-      skuInput.value
-    );
-
+  const sku = normalizeValue(skuInput.value);
 
   if (!sku) {
-
     clearSearchResult();
 
-
-    showSearchError(
-      'Masukkan SKU terlebih dahulu.'
-    );
-
+    showSearchError("Masukkan SKU terlebih dahulu.");
 
     skuInput.focus();
 
     return;
-
   }
 
-
-  await executeSearch(
-    sku
-  );
-
+  await executeSearch(sku);
 }
-
 
 /* =========================================
    CAMERA SCANNER
 ========================================= */
 
 async function handleOpenScanner() {
-
-  if (
-    AppState.searchLoading
-  ) {
+  if (AppState.searchLoading) {
     return;
   }
 
-
   hideSearchError();
 
-
   try {
+    await Scanner.open(async (decodedText) => {
+      const sku = normalizeValue(decodedText);
 
-    await Scanner.open(
-      async decodedText => {
+      if (!sku) {
+        showSearchError("Barcode tidak menghasilkan SKU yang valid.");
 
-        const sku =
-          normalizeValue(
-            decodedText
-          );
-
-
-        if (!sku) {
-
-          showSearchError(
-            'Barcode tidak menghasilkan SKU yang valid.'
-          );
-
-          return;
-
-        }
-
-
-        const skuInput =
-          document.getElementById(
-            'skuInput'
-          );
-
-
-        skuInput.value =
-          sku;
-
-
-        showToast(
-          `SKU terbaca: ${sku}`
-        );
-
-
-        await executeSearch(
-          sku
-        );
-
+        return;
       }
-    );
 
+      const skuInput = document.getElementById("skuInput");
 
+      skuInput.value = sku;
+
+      showToast(`SKU terbaca: ${sku}`);
+
+      await executeSearch(sku);
+    });
   } catch (error) {
+    console.error("Scanner error:", error);
 
-    console.error(
-      'Scanner error:',
-      error
-    );
-
-
-    showSearchError(
-      error.message ||
-      'Kamera tidak dapat dibuka.'
-    );
-
+    showSearchError(error.message || "Kamera tidak dapat dibuka.");
   }
-
 }
-
 
 /* =========================================
    EXECUTE SEARCH
 ========================================= */
 
-async function executeSearch(
-  sku
-) {
-
-  if (
-    AppState.searchLoading
-  ) {
+async function executeSearch(sku) {
+  if (AppState.searchLoading) {
     return;
   }
 
-
   hideSearchError();
-
 
   clearSearchResult();
 
-
-  setSearchLoading(
-    true
-  );
-
+  setSearchLoading(true);
 
   try {
+    const result = await Api.post("/warehouse/search", {
+      sku,
+    });
 
-    const result =
-      await Api.post(
-        '/warehouse/search',
-        {
-          sku
-        }
-      );
-
-
-    if (
-      !result ||
-      result.success !== true
-    ) {
-
-      throw new Error(
-        result?.message ||
-        'Barang tidak ditemukan.'
-      );
-
+    if (!result || result.success !== true) {
+      throw new Error(result?.message || "Barang tidak ditemukan.");
     }
-
 
     if (!result.item) {
-
-      throw new Error(
-        'Response barang tidak valid.'
-      );
-
+      throw new Error("Response barang tidak valid.");
     }
 
+    AppState.lastSearch = result.item;
 
-    AppState.lastSearch =
-      result.item;
-
-
-    renderSearchResult(
-      result.item
-    );
-
-
+    renderSearchResult(result.item);
   } catch (error) {
-
-    console.error(
-      'Search error:',
-      error
-    );
-
+    console.error("Search error:", error);
 
     clearSearchResult();
 
-
-    showSearchError(
-      error.message ||
-      'Terjadi kesalahan saat mencari barang.'
-    );
-
-
+    showSearchError(error.message || "Terjadi kesalahan saat mencari barang.");
   } finally {
-
-    setSearchLoading(
-      false
-    );
-
+    setSearchLoading(false);
   }
-
 }
-
 
 /* =========================================
    SEARCH RESULT
 ========================================= */
 
-function renderSearchResult(
-  item
-) {
-
+function renderSearchResult(item) {
   hideSearchError();
 
+  const resultBox = document.getElementById("searchResult");
 
-  const resultBox =
-    document.getElementById(
-      'searchResult'
-    );
+  const sku = String(item.sku || "-");
 
+  const description = String(item.description || "-");
 
-  const sku =
-    String(
-      item.sku || '-'
-    );
+  const totalStock = Number(item.total_stock || 0);
 
+  const locations = Array.isArray(item.locations) ? item.locations : [];
 
-  const description =
-    String(
-      item.description || '-'
-    );
+  document.getElementById("resultSku").textContent = `SKU ${sku}`;
 
+  document.getElementById("resultDescription").textContent = description;
 
-  const totalStock =
-    Number(
-      item.total_stock || 0
-    );
+  document.getElementById("resultTotalStock").textContent =
+    formatNumber(totalStock);
 
+  document.getElementById("locationCount").textContent =
+    `${locations.length} lokasi stock`;
 
-  const locations =
-    Array.isArray(
-      item.locations
-    )
-      ? item.locations
-      : [];
+  renderLocations(locations);
 
-
-  document
-    .getElementById(
-      'resultSku'
-    )
-    .textContent =
-      `SKU ${sku}`;
-
-
-  document
-    .getElementById(
-      'resultDescription'
-    )
-    .textContent =
-      description;
-
-
-  document
-    .getElementById(
-      'resultTotalStock'
-    )
-    .textContent =
-      formatNumber(
-        totalStock
-      );
-
-
-  document
-    .getElementById(
-      'locationCount'
-    )
-    .textContent =
-      `${locations.length} lokasi stock`;
-
-
-  renderLocations(
-    locations
-  );
-
-
-  resultBox.classList.remove(
-    'hidden'
-  );
-
+  resultBox.classList.remove("hidden");
 
   lucide.createIcons();
-
 }
-
 
 /* =========================================
    LOCATIONS
 ========================================= */
 
-function renderLocations(
-  locations
-) {
+function renderLocations(locations) {
+  const container = document.getElementById("locationList");
 
-  const container =
-    document.getElementById(
-      'locationList'
-    );
+  container.innerHTML = "";
 
-
-  container.innerHTML =
-    '';
-
-
-  if (
-    !locations.length
-  ) {
-
-    const empty =
-      document.createElement(
-        'div'
-      );
-
+  if (!locations.length) {
+    const empty = document.createElement("div");
 
     empty.className = `
       rounded-2xl
@@ -662,7 +291,6 @@ function renderLocations(
       p-6
       text-center
     `;
-
 
     empty.innerHTML = `
 
@@ -707,30 +335,17 @@ function renderLocations(
 
     `;
 
-
-    container.appendChild(
-      empty
-    );
-
+    container.appendChild(empty);
 
     lucide.createIcons();
 
-
     return;
-
   }
 
+  locations.forEach((location) => {
+    const card = document.createElement("div");
 
-  locations.forEach(
-    location => {
-
-      const card =
-        document.createElement(
-          'div'
-        );
-
-
-      card.className = `
+    card.className = `
         rounded-2xl
         border
         border-slate-200
@@ -739,44 +354,17 @@ function renderLocations(
         shadow-sm
       `;
 
+    const locationCode = escapeHtml(location.location_code || "-");
 
-      const locationCode =
-        escapeHtml(
-          location.location_code ||
-          '-'
-        );
+    const zone = escapeHtml(location.zone || "-");
 
+    const section = escapeHtml(location.section || "-");
 
-      const zone =
-        escapeHtml(
-          location.zone ||
-          '-'
-        );
+    const position = escapeHtml(location.position || "-");
 
+    const qty = formatNumber(Number(location.qty || 0));
 
-      const section =
-        escapeHtml(
-          location.section ||
-          '-'
-        );
-
-
-      const position =
-        escapeHtml(
-          location.position ||
-          '-'
-        );
-
-
-      const qty =
-        formatNumber(
-          Number(
-            location.qty || 0
-          )
-        );
-
-
-      card.innerHTML = `
+    card.innerHTML = `
 
         <div
           class="
@@ -921,93 +509,44 @@ function renderLocations(
 
       `;
 
-
-      container.appendChild(
-        card
-      );
-
-    }
-  );
-
+    container.appendChild(card);
+  });
 
   lucide.createIcons();
-
 }
-
 
 /* =========================================
    CLEAR RESULT
 ========================================= */
 
 function clearSearchResult() {
+  AppState.lastSearch = null;
 
-  AppState.lastSearch =
-    null;
+  document.getElementById("searchResult").classList.add("hidden");
 
-
-  document
-    .getElementById(
-      'searchResult'
-    )
-    .classList.add(
-      'hidden'
-    );
-
-
-  document
-    .getElementById(
-      'locationList'
-    )
-    .innerHTML =
-      '';
-
+  document.getElementById("locationList").innerHTML = "";
 }
-
 
 /* =========================================
    SEARCH LOADING
 ========================================= */
 
-function setSearchLoading(
-  loading
-) {
+function setSearchLoading(loading) {
+  AppState.searchLoading = loading;
 
-  AppState.searchLoading =
-    loading;
+  const button = document.getElementById("searchButton");
 
+  const scanButton = document.getElementById("scanCameraButton");
 
-  const button =
-    document.getElementById(
-      'searchButton'
-    );
+  const input = document.getElementById("skuInput");
 
+  button.disabled = loading;
 
-  const scanButton =
-    document.getElementById(
-      'scanCameraButton'
-    );
+  scanButton.disabled = loading;
 
-
-  const input =
-    document.getElementById(
-      'skuInput'
-    );
-
-
-  button.disabled =
-    loading;
-
-
-  scanButton.disabled =
-    loading;
-
-
-  input.disabled =
-    loading;
-
+  input.disabled = loading;
 
   if (loading) {
-
     button.innerHTML = `
 
       <div
@@ -1027,9 +566,7 @@ function setSearchLoading(
       </span>
 
     `;
-
   } else {
-
     button.innerHTML = `
 
       <i
@@ -1042,227 +579,120 @@ function setSearchLoading(
       </span>
 
     `;
-
   }
 
-
   lucide.createIcons();
-
 }
-
 
 /* =========================================
    NAVIGATION
 ========================================= */
 
-function navigateTo(
-  page
-) {
+function navigateTo(page) {
+  const allowedPages = ["dashboard", "search", "movement", "history"];
 
-  const allowedPages = [
-    'dashboard',
-    'search'
-  ];
-
-
-  if (
-    !allowedPages.includes(
-      page
-    )
-  ) {
-
-    page =
-      'dashboard';
-
+  if (!allowedPages.includes(page)) {
+    page = "dashboard";
   }
-
 
   /**
    * Matikan kamera jika user
    * meninggalkan halaman search.
    */
-  if (
-    page !== 'search' &&
-    Scanner.isVisible()
-  ) {
-
+  if (page !== "search" && Scanner.isVisible()) {
     Scanner.close();
-
   }
 
+  AppState.currentPage = page;
 
-  AppState.currentPage =
-    page;
+  const dashboardPage = document.getElementById("dashboardPage");
 
+  const searchPage = document.getElementById("searchPage");
 
-  const dashboardPage =
-    document.getElementById(
-      'dashboardPage'
-    );
+  const movementPage = document.getElementById("movementPage");
 
+  const historyPage = document.getElementById("historyPage");
 
-  const searchPage =
-    document.getElementById(
-      'searchPage'
-    );
+  dashboardPage.classList.add("hidden");
 
+  searchPage.classList.add("hidden");
 
-  dashboardPage.classList.add(
-    'hidden'
-  );
+  movementPage?.classList.add("hidden");
 
+  historyPage?.classList.add("hidden");
 
-  searchPage.classList.add(
-    'hidden'
-  );
+  if (page === "dashboard") {
+    dashboardPage.classList.remove("hidden");
 
-
-  if (
-    page === 'dashboard'
-  ) {
-
-    dashboardPage.classList.remove(
-      'hidden'
-    );
-
-
-    setHeader(
-      'Selamat bekerja',
-      'Dashboard'
-    );
-
+    setHeader("Selamat bekerja", "Dashboard");
   }
 
+  if (page === "search") {
+    searchPage.classList.remove("hidden");
 
-  if (
-    page === 'search'
-  ) {
-
-    searchPage.classList.remove(
-      'hidden'
-    );
-
-
-    setHeader(
-      'Warehouse',
-      'Cari Barang'
-    );
-
+    setHeader("Warehouse", "Cari Barang");
   }
 
+  if (page === "movement") {
+    movementPage?.classList.remove("hidden");
+
+    setHeader("Warehouse", "Movement");
+  }
+
+  if (page === "history") {
+    historyPage?.classList.remove("hidden");
+
+    setHeader("Warehouse", "Riwayat");
+  }
 
   updateNavigation();
 
-
   window.scrollTo({
     top: 0,
-    behavior: 'instant'
+    behavior: "instant",
   });
-
 }
-
 
 /* =========================================
    NAV STATE
 ========================================= */
 
 function updateNavigation() {
+  document.querySelectorAll(".desktop-nav[data-page]").forEach((button) => {
+    const active = button.dataset.page === AppState.currentPage;
 
-  document
-    .querySelectorAll(
-      '.desktop-nav[data-page]'
-    )
-    .forEach(
-      button => {
+    button.classList.toggle("desktop-nav-active", active);
+  });
 
-        const active =
-          button.dataset.page ===
-          AppState.currentPage;
+  document.querySelectorAll(".mobile-nav[data-page]").forEach((button) => {
+    const active = button.dataset.page === AppState.currentPage;
 
-
-        button.classList.toggle(
-          'desktop-nav-active',
-          active
-        );
-
-      }
-    );
-
-
-  document
-    .querySelectorAll(
-      '.mobile-nav[data-page]'
-    )
-    .forEach(
-      button => {
-
-        const active =
-          button.dataset.page ===
-          AppState.currentPage;
-
-
-        button.classList.toggle(
-          'mobile-nav-active',
-          active
-        );
-
-      }
-    );
-
+    button.classList.toggle("mobile-nav-active", active);
+  });
 }
-
 
 /* =========================================
    HEADER
 ========================================= */
 
-function setHeader(
-  label,
-  title
-) {
+function setHeader(label, title) {
+  document.getElementById("headerPageLabel").textContent = label;
 
-  document
-    .getElementById(
-      'headerPageLabel'
-    )
-    .textContent =
-      label;
-
-
-  document
-    .getElementById(
-      'headerTitle'
-    )
-    .textContent =
-      title;
-
+  document.getElementById("headerTitle").textContent = title;
 }
-
 
 /* =========================================
    LOGIN LOADING
 ========================================= */
 
-function setLoginLoading(
-  loading
-) {
+function setLoginLoading(loading) {
+  AppState.loginLoading = loading;
 
-  AppState.loginLoading =
-    loading;
+  const button = document.getElementById("loginButton");
 
-
-  const button =
-    document.getElementById(
-      'loginButton'
-    );
-
-
-  button.disabled =
-    loading;
-
+  button.disabled = loading;
 
   if (loading) {
-
     button.innerHTML = `
 
       <div
@@ -1282,9 +712,7 @@ function setLoginLoading(
       </span>
 
     `;
-
   } else {
-
     button.innerHTML = `
 
       <span>
@@ -1297,462 +725,196 @@ function setLoginLoading(
       ></i>
 
     `;
-
   }
 
-
   lucide.createIcons();
-
 }
-
 
 /* =========================================
    PAGE STATE
 ========================================= */
 
 function showLogin() {
+  document.getElementById("appPage").classList.add("hidden");
 
-  document
-    .getElementById(
-      'appPage'
-    )
-    .classList.add(
-      'hidden'
-    );
+  const loginPage = document.getElementById("loginPage");
 
+  loginPage.classList.remove("hidden");
 
-  const loginPage =
-    document.getElementById(
-      'loginPage'
-    );
+  loginPage.classList.add("flex");
 
-
-  loginPage.classList.remove(
-    'hidden'
-  );
-
-
-  loginPage.classList.add(
-    'flex'
-  );
-
-
-  document
-    .getElementById(
-      'bootPage'
-    )
-    .classList.add(
-      'hidden'
-    );
-
+  document.getElementById("bootPage").classList.add("hidden");
 
   lucide.createIcons();
 
-
-  setTimeout(
-    () => {
-
-      document
-        .getElementById(
-          'nikInput'
-        )
-        .focus();
-
-    },
-    100
-  );
-
+  setTimeout(() => {
+    document.getElementById("nikInput").focus();
+  }, 100);
 }
 
-
 function showApp() {
+  const loginPage = document.getElementById("loginPage");
 
-  const loginPage =
-    document.getElementById(
-      'loginPage'
-    );
+  loginPage.classList.add("hidden");
 
+  loginPage.classList.remove("flex");
 
-  loginPage.classList.add(
-    'hidden'
-  );
-
-
-  loginPage.classList.remove(
-    'flex'
-  );
-
-
-  document
-    .getElementById(
-      'appPage'
-    )
-    .classList.remove(
-      'hidden'
-    );
-
+  document.getElementById("appPage").classList.remove("hidden");
 
   renderUser();
 
-
-  document
-    .getElementById(
-      'bootPage'
-    )
-    .classList.add(
-      'hidden'
-    );
-
+  document.getElementById("bootPage").classList.add("hidden");
 
   lucide.createIcons();
-
 }
-
 
 /* =========================================
    USER
 ========================================= */
 
 function renderUser() {
-
-  const user =
-    AppState.user;
-
+  const user = AppState.user;
 
   if (!user) {
     return;
   }
 
+  const displayName = user.nama || user.nik || "PIC";
 
-  const displayName =
-    user.nama ||
-    user.nik ||
-    'PIC';
+  document.getElementById("headerUserName").textContent = displayName;
 
+  document.getElementById("headerUserNik").textContent =
+    `NIK ${user.nik || "-"}`;
 
-  document
-    .getElementById(
-      'headerUserName'
-    )
-    .textContent =
-      displayName;
+  document.getElementById("dashboardUserName").textContent = displayName;
 
+  document.getElementById("dashboardNik").textContent =
+    `NIK ${user.nik || "-"}`;
 
-  document
-    .getElementById(
-      'headerUserNik'
-    )
-    .textContent =
-      `NIK ${user.nik || '-'}`;
-
-
-  document
-    .getElementById(
-      'dashboardUserName'
-    )
-    .textContent =
-      displayName;
-
-
-  document
-    .getElementById(
-      'dashboardNik'
-    )
-    .textContent =
-      `NIK ${user.nik || '-'}`;
-
-
-  document
-    .getElementById(
-      'dashboardRole'
-    )
-    .textContent =
-      String(
-        user.role ||
-        'PIC'
-      ).toUpperCase();
-
+  document.getElementById("dashboardRole").textContent = String(
+    user.role || "PIC",
+  ).toUpperCase();
 }
-
 
 /* =========================================
    LOGOUT
 ========================================= */
 
 async function logout() {
-
   await Scanner.close();
-
 
   Auth.clearSession();
 
+  AppState.user = null;
 
-  AppState.user =
-    null;
+  AppState.currentPage = "dashboard";
 
+  AppState.lastSearch = null;
 
-  AppState.currentPage =
-    'dashboard';
+  document.getElementById("nikInput").value = "";
 
-
-  AppState.lastSearch =
-    null;
-
-
-  document
-    .getElementById(
-      'nikInput'
-    )
-    .value =
-      '';
-
-
-  document
-    .getElementById(
-      'skuInput'
-    )
-    .value =
-      '';
-
+  document.getElementById("skuInput").value = "";
 
   clearSearchResult();
 
-
   hideSearchError();
-
 
   showLogin();
 
-
-  showToast(
-    'Anda telah keluar.'
-  );
-
+  showToast("Anda telah keluar.");
 }
-
 
 /* =========================================
    LOGIN ERROR
 ========================================= */
 
-function showLoginError(
-  message
-) {
+function showLoginError(message) {
+  const errorBox = document.getElementById("loginError");
 
-  const errorBox =
-    document.getElementById(
-      'loginError'
-    );
+  errorBox.textContent = message;
 
-
-  errorBox.textContent =
-    message;
-
-
-  errorBox.classList.remove(
-    'hidden'
-  );
-
+  errorBox.classList.remove("hidden");
 }
-
 
 function hideLoginError() {
+  const errorBox = document.getElementById("loginError");
 
-  const errorBox =
-    document.getElementById(
-      'loginError'
-    );
+  errorBox.textContent = "";
 
-
-  errorBox.textContent =
-    '';
-
-
-  errorBox.classList.add(
-    'hidden'
-  );
-
+  errorBox.classList.add("hidden");
 }
-
 
 /* =========================================
    SEARCH ERROR
 ========================================= */
 
-function showSearchError(
-  message
-) {
+function showSearchError(message) {
+  const box = document.getElementById("searchError");
 
-  const box =
-    document.getElementById(
-      'searchError'
-    );
+  document.getElementById("searchErrorMessage").textContent = message;
 
-
-  document
-    .getElementById(
-      'searchErrorMessage'
-    )
-    .textContent =
-      message;
-
-
-  box.classList.remove(
-    'hidden'
-  );
-
+  box.classList.remove("hidden");
 
   lucide.createIcons();
-
 }
-
 
 function hideSearchError() {
+  document.getElementById("searchError").classList.add("hidden");
 
-  document
-    .getElementById(
-      'searchError'
-    )
-    .classList.add(
-      'hidden'
-    );
-
-
-  document
-    .getElementById(
-      'searchErrorMessage'
-    )
-    .textContent =
-      '';
-
+  document.getElementById("searchErrorMessage").textContent = "";
 }
-
 
 /* =========================================
    NORMALIZE
 ========================================= */
 
-function normalizeValue(
-  value
-) {
-
-  return String(
-    value || ''
-  )
+function normalizeValue(value) {
+  return String(value || "")
     .trim()
-    .replace(
-      /\s+/g,
-      ''
-    );
-
+    .replace(/\s+/g, "");
 }
-
 
 /* =========================================
    FORMATTER
 ========================================= */
 
-function formatNumber(
-  value
-) {
+function formatNumber(value) {
+  const number = Number(value);
 
-  const number =
-    Number(value);
-
-
-  if (
-    !Number.isFinite(
-      number
-    )
-  ) {
-
-    return '0';
-
+  if (!Number.isFinite(number)) {
+    return "0";
   }
 
-
-  return new Intl.NumberFormat(
-    'id-ID'
-  ).format(
-    number
-  );
-
+  return new Intl.NumberFormat("id-ID").format(number);
 }
-
 
 /* =========================================
    ESCAPE HTML
 ========================================= */
 
-function escapeHtml(
-  value
-) {
-
-  return String(
-    value
-  )
-    .replaceAll(
-      '&',
-      '&amp;'
-    )
-    .replaceAll(
-      '<',
-      '&lt;'
-    )
-    .replaceAll(
-      '>',
-      '&gt;'
-    )
-    .replaceAll(
-      '"',
-      '&quot;'
-    )
-    .replaceAll(
-      "'",
-      '&#039;'
-    );
-
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
-
 
 /* =========================================
    TOAST
 ========================================= */
 
-function showToast(
-  message
-) {
+function showToast(message) {
+  const toast = document.getElementById("toast");
 
-  const toast =
-    document.getElementById(
-      'toast'
-    );
+  toast.textContent = message;
 
+  toast.classList.remove("hidden");
 
-  toast.textContent =
-    message;
+  clearTimeout(window.__warehouseToast);
 
-
-  toast.classList.remove(
-    'hidden'
-  );
-
-
-  clearTimeout(
-    window.__warehouseToast
-  );
-
-
-  window.__warehouseToast =
-    setTimeout(
-      () => {
-
-        toast.classList.add(
-          'hidden'
-        );
-
-      },
-      2500
-    );
-
+  window.__warehouseToast = setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 2500);
 }
