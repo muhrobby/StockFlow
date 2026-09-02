@@ -12,6 +12,9 @@ window.APP_CONFIG = Object.freeze({
     8 * 60 * 60 * 1000,
 
   REQUEST_TIMEOUT_MS:
-    15000
+    15000,
+
+  BULK_REQUEST_TIMEOUT_MS:
+    60000
 
 });

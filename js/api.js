@@ -5,6 +5,10 @@
     options = {}
   ) {
 
+    const timeoutMs =
+      options.timeoutMs ||
+      APP_CONFIG.REQUEST_TIMEOUT_MS;
+
     const controller =
       new AbortController();
 
@@ -12,7 +16,7 @@
     const timeoutId =
       setTimeout(
         () => controller.abort(),
-        APP_CONFIG.REQUEST_TIMEOUT_MS
+        timeoutMs
       );
 
 
@@ -105,7 +109,8 @@
 
   async function post(
     path,
-    body
+    body,
+    options = {}
   ) {
 
     return request(
@@ -114,7 +119,9 @@
         method: 'POST',
 
         body:
-          JSON.stringify(body)
+          JSON.stringify(body),
+
+        ...options
       }
     );
 

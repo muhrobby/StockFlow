@@ -258,6 +258,19 @@
                 <p class="mt-1 text-xs text-slate-400">Riwayat movement</p>
               </div>
             </button>
+            <button
+              id="btnOpenBulkFromDashboard"
+              type="button"
+              class="dashboard-menu transition hover:border-emerald-200 hover:shadow-md active:scale-[.98]"
+            >
+              <div class="dashboard-menu-icon bg-emerald-50 text-emerald-600">
+                <i data-lucide="file-spreadsheet"></i>
+              </div>
+              <div class="mt-4">
+                <h3 class="font-black">Bulk Upload</h3>
+                <p class="mt-1 text-xs text-slate-400">Import CSV stok</p>
+              </div>
+            </button>
           </div>
         </section>
 
@@ -410,18 +423,28 @@
           <div
             class="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:p-6"
           >
-            <div class="mb-6 flex items-start gap-3">
-              <div
-                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600"
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+              <div class="flex items-start gap-3">
+                <div
+                  class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600"
+                >
+                  <i data-lucide="arrow-left-right" class="h-6 w-6"></i>
+                </div>
+                <div>
+                  <h1 class="text-xl font-black">Movement Barang</h1>
+                  <p class="mt-1 text-sm leading-5 text-slate-500">
+                    Catat barang masuk, keluar, atau pindah lokasi.
+                  </p>
+                </div>
+              </div>
+              <button
+                id="btnOpenBulkFromMovement"
+                type="button"
+                class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 active:scale-95"
               >
-                <i data-lucide="arrow-left-right" class="h-6 w-6"></i>
-              </div>
-              <div>
-                <h1 class="text-xl font-black">Movement Barang</h1>
-                <p class="mt-1 text-sm leading-5 text-slate-500">
-                  Catat barang masuk, keluar, atau pindah lokasi.
-                </p>
-              </div>
+                <i data-lucide="file-spreadsheet" class="h-4 w-4 text-emerald-600"></i>
+                <span>Bulk Upload CSV</span>
+              </button>
             </div>
             <form id="movementForm" class="space-y-5">
               <div>
@@ -690,6 +713,279 @@
       </div>
     </div>
 
+    <!-- Modal Bulk Upload -->
+    <div
+      id="bulkUploadModal"
+      class="fixed inset-0 z-[500] hidden items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+    >
+      <div
+        class="relative flex max-h-[90vh] w-full max-w-lg flex-col rounded-3xl bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+      >
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+              <i data-lucide="file-spreadsheet" class="h-5 w-5"></i>
+            </div>
+            <div>
+              <h3 class="font-black text-slate-900">Bulk Upload Stock</h3>
+              <p class="text-xs text-slate-400">Impor data stok via file CSV</p>
+            </div>
+          </div>
+          <button
+            id="bulkModalCloseBtn"
+            type="button"
+            class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-400 hover:text-slate-600 active:scale-95"
+          >
+            <i data-lucide="x" class="h-5 w-5"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-5">
+          <!-- Pilihan Mode Upload -->
+          <div>
+            <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
+              Mode Perhitungan Stok
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <label
+                class="flex cursor-pointer flex-col rounded-2xl border-2 border-emerald-600 bg-emerald-50/40 p-3.5 transition"
+                id="labelModeAdd"
+              >
+                <div class="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="bulkMode"
+                    value="ADD"
+                    checked
+                    class="h-4 w-4 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span class="text-xs font-black text-slate-900">Tambah Stok</span>
+                </div>
+                <span class="mt-1 text-[11px] leading-tight text-slate-500">
+                  Stok baru = Stok lama + Qty CSV (Restock/Inbound)
+                </span>
+              </label>
+
+              <label
+                class="flex cursor-pointer flex-col rounded-2xl border-2 border-slate-200 bg-slate-50/60 p-3.5 transition"
+                id="labelModeSet"
+              >
+                <div class="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="bulkMode"
+                    value="SET"
+                    class="h-4 w-4 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span class="text-xs font-black text-slate-900">Set Stok</span>
+                </div>
+                <span class="mt-1 text-[11px] leading-tight text-slate-500">
+                  Stok lama diganti Qty CSV (Stock Opname)
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Panduan Format & Download Template -->
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-xs font-bold text-slate-700">Format Kolom CSV Wajib</p>
+                <p class="mt-0.5 font-mono text-xs font-bold text-emerald-700">
+                  sku,location,qty
+                </p>
+                <p class="mt-1 text-[11px] text-slate-500">
+                  Contoh: <code class="font-mono">100001,A-01-P10,10</code>
+                </p>
+              </div>
+              <button
+                id="bulkDownloadTemplateBtn"
+                type="button"
+                class="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-95"
+              >
+                <i data-lucide="download" class="h-3.5 w-3.5 text-slate-500"></i>
+                <span>Download Template</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Drag & Drop / File Input Box -->
+          <div>
+            <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
+              File CSV
+            </label>
+            <div
+              id="bulkDropzone"
+              class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/50 p-6 text-center transition hover:border-emerald-500 hover:bg-emerald-50/30 cursor-pointer"
+            >
+              <input
+                id="bulkFileInput"
+                type="file"
+                accept=".csv,text/csv"
+                class="hidden"
+              />
+              <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 text-slate-400">
+                <i data-lucide="cloud-upload" class="h-6 w-6"></i>
+              </div>
+              <p class="mt-3 text-xs font-bold text-slate-700">
+                Klik untuk memilih file atau seret file ke sini
+              </p>
+              <p class="mt-1 text-[11px] text-slate-400">
+                Format didukung: .csv (Maks. 1.000 baris per file)
+              </p>
+            </div>
+
+            <!-- File Info Box (Tampil saat file terpilih) -->
+            <div
+              id="bulkFileInfo"
+              class="mt-3 hidden items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50/60 p-3"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white">
+                  <i data-lucide="file-check" class="h-5 w-5"></i>
+                </div>
+                <div class="min-w-0">
+                  <p id="bulkFileName" class="truncate text-xs font-bold text-emerald-950">
+                    stock.csv
+                  </p>
+                  <p id="bulkFileMeta" class="text-[11px] text-emerald-700">
+                    0 KB • 0 baris
+                  </p>
+                </div>
+              </div>
+              <button
+                id="bulkRemoveFileBtn"
+                type="button"
+                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-slate-400 hover:bg-red-100 hover:text-red-600 transition active:scale-95"
+              >
+                <i data-lucide="trash-2" class="h-4 w-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Alert Error Pre-validasi / Response -->
+          <div
+            id="bulkErrorAlert"
+            class="hidden rounded-2xl border border-red-200 bg-red-50 p-4"
+          >
+            <div class="flex gap-3">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600">
+                <i data-lucide="triangle-alert" class="h-4 w-4"></i>
+              </div>
+              <div class="min-w-0">
+                <h4 class="text-xs font-black text-red-900">Validasi Gagal</h4>
+                <p id="bulkErrorMessage" class="mt-0.5 text-xs text-red-700 leading-normal">
+                  -
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-6 py-4">
+          <button
+            id="bulkModalCancelBtn"
+            type="button"
+            class="h-11 rounded-xl px-4 text-xs font-bold text-slate-500 hover:bg-slate-100 transition active:scale-95"
+          >
+            Batal
+          </button>
+          <button
+            id="bulkSubmitBtn"
+            type="button"
+            disabled
+            class="flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-xs font-bold text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <i data-lucide="upload" class="h-4 w-4"></i>
+            <span id="bulkSubmitLabel">Upload & Validasi</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Result Bulk Upload -->
+    <div
+      id="bulkResultModal"
+      class="fixed inset-0 z-[510] hidden items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+    >
+      <div
+        class="relative flex w-full max-w-md flex-col rounded-3xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+      >
+        <div class="text-center">
+          <div
+            id="bulkResultIconWrapper"
+            class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 shadow-sm"
+          >
+            <i id="bulkResultIcon" data-lucide="check-circle-2" class="h-8 w-8"></i>
+          </div>
+          <h3 id="bulkResultTitle" class="mt-4 text-lg font-black text-slate-900">
+            Bulk Upload Selesai
+          </h3>
+          <p id="bulkResultSubtitle" class="mt-1 text-xs text-slate-500">
+            Ringkasan pemrosesan data stok.
+          </p>
+        </div>
+
+        <!-- Counter Badge -->
+        <div class="mt-5 grid grid-cols-2 gap-3">
+          <div class="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3 text-center">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Berhasil</p>
+            <p id="bulkSuccessCount" class="mt-1 text-2xl font-black text-emerald-950">0</p>
+          </div>
+          <div class="rounded-2xl border border-red-100 bg-red-50/60 p-3 text-center">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-red-600">Gagal</p>
+            <p id="bulkFailedCount" class="mt-1 text-2xl font-black text-red-950">0</p>
+          </div>
+        </div>
+
+        <!-- Info Box Jika Ada Gagal -->
+        <div
+          id="bulkResultFailBox"
+          class="mt-4 hidden rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-left"
+        >
+          <div class="flex gap-2.5">
+            <i data-lucide="triangle-alert" class="h-5 w-5 shrink-0 text-amber-600"></i>
+            <div>
+              <p class="text-xs font-bold text-amber-900">Perhatian</p>
+              <p class="mt-0.5 text-[11px] leading-relaxed text-amber-700">
+                File feedback sudah otomatis diunduh. Silakan cek file tersebut untuk melihat detail kegagalan setiap baris.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Box Jika Semua Sukses -->
+        <div
+          id="bulkResultSuccessBox"
+          class="mt-4 hidden rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5 text-center text-xs font-bold text-emerald-800"
+        >
+          🎉 Seluruh data berhasil diproses tanpa kesalahan!
+        </div>
+
+        <!-- Aksi -->
+        <div class="mt-6 flex flex-col gap-2">
+          <button
+            id="bulkDownloadFeedbackBtn"
+            type="button"
+            class="hidden h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 transition hover:bg-slate-100 active:scale-95"
+          >
+            <i data-lucide="download" class="h-4 w-4 text-slate-500"></i>
+            <span>Unduh Ulang File Feedback</span>
+          </button>
+          <button
+            id="bulkResultCloseBtn"
+            type="button"
+            class="h-11 w-full rounded-xl bg-slate-900 text-xs font-black text-white transition hover:bg-slate-800 active:scale-95"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div
       id="toast"
       class="pointer-events-none fixed left-1/2 top-5 z-[600] hidden w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-2xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white shadow-xl"
@@ -702,5 +998,6 @@
     <script src="./js/scanner.js?v=4"></script>
     <script src="./js/app.js?v=6"></script>
     <script src="./js/movement.js?v=2"></script>
+    <script src="./js/bulk-upload.js?v=1"></script>
   </body>
 </html>

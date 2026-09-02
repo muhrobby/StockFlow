@@ -647,6 +647,10 @@ function navigateTo(page) {
 
   updateNavigation();
 
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+
   window.scrollTo({
     top: 0,
     behavior: "instant",
