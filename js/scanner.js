@@ -208,6 +208,11 @@
       navigator.vibrate(120);
     }
 
+    // Mainkan suara beep renyah scanner fisik
+    if (window.AudioFeedback) {
+      window.AudioFeedback.playSuccess();
+    }
+
     const callback = successCallback;
 
     await close();

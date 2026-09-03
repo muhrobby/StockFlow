@@ -28,6 +28,10 @@ function initApp() {
 
   SyncTracker.init();
 
+  if (window.AudioFeedback) {
+    window.AudioFeedback.updateToggleUI();
+  }
+
   bindEvents();
 
   bootstrap();
@@ -55,6 +59,17 @@ function bindEvents() {
   document
     .getElementById("mobileLogoutButton")
     .addEventListener("click", logout);
+
+  // Audio Beep Feedback Toggle
+  const btnToggleAudio = document.getElementById("btnToggleAudio");
+  if (btnToggleAudio) {
+    btnToggleAudio.addEventListener("click", async () => {
+      if (window.AudioFeedback) {
+        const newState = await window.AudioFeedback.toggleAudio();
+        showToast(newState ? "Suara beep diaktifkan" : "Suara beep dimatikan");
+      }
+    });
+  }
 
   document.querySelectorAll("[data-page]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -776,6 +791,10 @@ function hideLoginError() {
 ========================================= */
 
 function showSearchError(message) {
+  if (window.AudioFeedback) {
+    window.AudioFeedback.playError();
+  }
+
   const box = document.getElementById("searchError");
 
   document.getElementById("searchErrorMessage").textContent = message;
@@ -1795,6 +1814,10 @@ async function handleQuickMovementSubmit() {
     navigator.vibrate([60, 40, 60]);
   }
 
+  if (window.AudioFeedback) {
+    window.AudioFeedback.playSuccess();
+  }
+
   closeQuickMovementModal();
 
   if (mode === "OUT") {
@@ -1851,6 +1874,10 @@ async function handleQuickMovementSubmit() {
             navigator.vibrate([150, 75, 150]);
           }
 
+          if (window.AudioFeedback) {
+            window.AudioFeedback.playError();
+          }
+
           openErrorModal({
             title: "Koneksi Terputus (Offline)",
             message:
@@ -1874,6 +1901,10 @@ async function handleQuickMovementSubmit() {
 
           if (navigator.vibrate) {
             navigator.vibrate([250, 100, 250, 100, 250]);
+          }
+
+          if (window.AudioFeedback) {
+            window.AudioFeedback.playError();
           }
 
           openErrorModal({

@@ -156,6 +156,9 @@
   }
 
   function showError(msg) {
+    if (window.AudioFeedback) {
+      window.AudioFeedback.playError();
+    }
     if (elements.errorAlert && elements.errorMessage) {
       elements.errorMessage.textContent = msg;
       elements.errorAlert.classList.remove('hidden');
@@ -292,6 +295,9 @@
     if (elements.resultFailedCount) elements.resultFailedCount.textContent = failedCount;
 
     if (failedCount > 0) {
+      if (window.AudioFeedback) {
+        window.AudioFeedback.playError();
+      }
       elements.resultFailBox?.classList.remove('hidden');
       elements.resultSuccessBox?.classList.add('hidden');
       elements.btnDownloadFeedback?.classList.remove('hidden');
@@ -299,6 +305,9 @@
       // Otomatis download file feedback
       downloadFeedbackCSV(results);
     } else {
+      if (window.AudioFeedback) {
+        window.AudioFeedback.playSuccess();
+      }
       elements.resultFailBox?.classList.add('hidden');
       elements.resultSuccessBox?.classList.remove('hidden');
       elements.btnDownloadFeedback?.classList.add('hidden');

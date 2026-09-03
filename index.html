@@ -152,6 +152,17 @@
                 <p id="headerUserNik" class="text-xs text-slate-400">-</p>
               </div>
 
+              <!-- Tombol Audio Feedback Scanner (Mute / Unmute) -->
+              <button
+                id="btnToggleAudio"
+                type="button"
+                class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition hover:bg-slate-200 active:scale-95"
+                aria-label="Suara Beep Aktif"
+                title="Suara Beep: Aktif (Klik untuk bisukan)"
+              >
+                <i id="audioIcon" data-lucide="volume-2" class="h-5 w-5"></i>
+              </button>
+
               <!-- Container Lonceng & Dropdown Notifikasi (Nempel) -->
               <div class="relative">
                 <button
@@ -1402,9 +1413,10 @@
     <script src="./js/config.js?v=4"></script>
     <script src="./js/api.js?v=4"></script>
     <script src="./js/auth.js?v=4"></script>
-    <script src="./js/scanner.js?v=4"></script>
-    <script src="./js/app.js?v=15"></script>
-    <script src="./js/movement.js?v=6"></script>
+    <script src="./js/audio.js?v=2"></script>
+    <script src="./js/scanner.js?v=5"></script>
+    <script src="./js/app.js?v=17"></script>
+    <script src="./js/movement.js?v=7"></script>
     <script src="./js/bulk-upload.js?v=1"></script>
   </body>
 </html>

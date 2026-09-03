@@ -291,6 +291,11 @@ async function handleMovementSubmit(event) {
     navigator.vibrate([60, 40, 60]);
   }
 
+  // Mainkan Beep Sukses instan
+  if (window.AudioFeedback) {
+    window.AudioFeedback.playSuccess();
+  }
+
   const typeLabels = {
     IN: 'Barang masuk',
     OUT: 'Barang keluar',
@@ -389,6 +394,10 @@ function sendMovementBackground(payload, localMovementId) {
 
         if (navigator.vibrate) {
           navigator.vibrate([150, 75, 150]);
+        }
+
+        if (window.AudioFeedback) {
+          window.AudioFeedback.playError();
         }
 
         if (typeof openErrorModal === 'function') {
@@ -630,6 +639,11 @@ function resetMovementForm() {
 
 
 function showMovementError(message) {
+
+  // Bunyikan buzz error jika validasi movement gagal
+  if (window.AudioFeedback) {
+    window.AudioFeedback.playError();
+  }
 
   const box = document.getElementById('movementError');
   const messageBox = document.getElementById('movementErrorMessage');
