@@ -607,18 +607,28 @@
           </div>
           <div
             id="movementSuccess"
-            class="mt-4 hidden rounded-2xl border border-emerald-200 bg-emerald-50 p-4"
+            class="mt-4 hidden rounded-2xl border border-emerald-200 bg-emerald-50 p-4 transition-all duration-200"
           >
             <div class="flex items-start gap-3">
               <div
+                id="movementSuccessIcon"
                 class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600"
               >
                 <i data-lucide="circle-check" class="h-5 w-5"></i>
               </div>
-              <div class="min-w-0">
-                <h3 class="text-sm font-black text-emerald-900">
-                  Movement berhasil
-                </h3>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center justify-between gap-2">
+                  <h3 id="movementSuccessTitle" class="text-sm font-black text-emerald-900">
+                    Movement berhasil dicatat
+                  </h3>
+                  <span
+                    id="movementSuccessBadge"
+                    class="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800"
+                  >
+                    <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-600"></span>
+                    <span id="movementSuccessBadgeText">Menyinkronkan...</span>
+                  </span>
+                </div>
                 <p
                   id="movementSuccessMessage"
                   class="mt-1 text-sm text-emerald-700"
@@ -1284,7 +1294,7 @@
     <script src="./js/auth.js?v=4"></script>
     <script src="./js/scanner.js?v=4"></script>
     <script src="./js/app.js?v=11"></script>
-    <script src="./js/movement.js?v=2"></script>
+    <script src="./js/movement.js?v=3"></script>
     <script src="./js/bulk-upload.js?v=1"></script>
   </body>
 </html>
