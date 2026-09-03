@@ -1,6 +1,7 @@
 html,
 body {
   min-height: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -168,7 +169,6 @@ input {
 @media (max-width: 639px) {
   #quickMovementModal > div {
     animation: slideUpBottomSheet 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    padding-bottom: env(safe-area-inset-bottom, 1rem);
   }
 }
 

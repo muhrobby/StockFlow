@@ -7,26 +7,9 @@
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <title>StockFlow — Warehouse Management System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./css/tailwind.min.css?v=1" />
+    <link rel="stylesheet" href="./css/app.css?v=2" />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: {
-                50: "#fff1f2",
-                100: "#ffe4e6",
-                500: "#ef4444",
-                600: "#dc2626",
-                700: "#b91c1c",
-              },
-            },
-          },
-        },
-      };
-    </script>
-    <link rel="stylesheet" href="./css/app.css" />
   </head>
 
   <body class="bg-slate-50 text-slate-900 antialiased">
@@ -147,7 +130,7 @@
         </div>
       </aside>
 
-      <main class="min-w-0 flex-1 pb-24 lg:pb-0">
+      <main class="min-w-0 flex-1 pb-28 lg:pb-0">
         <header
           class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur"
         >
@@ -193,12 +176,12 @@
                 <!-- Dropdown Popover Notifikasi -->
                 <div
                   id="syncActivityModal"
-                  class="absolute -right-12 sm:right-0 top-full z-50 mt-2.5 hidden w-[calc(100vw-2rem)] max-w-[340px] sm:max-w-sm flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl ring-1 ring-slate-200/90 transition-all origin-top-right"
+                  class="absolute -right-12 sm:right-0 top-full z-50 mt-2.5 hidden w-[calc(100vw-2rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-sm flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl ring-1 ring-slate-200/90 transition-all origin-top-right"
                   role="region"
                   aria-labelledby="syncModalTitle"
                 >
                   <!-- Panah Kecil (Caret) Menunjuk ke Lonceng -->
-                  <div class="absolute -top-1.5 right-15 sm:right-3.5 h-3 w-3 rotate-45 border-l border-t border-slate-200 bg-white shadow-sm"></div>
+                  <div class="absolute -top-1.5 right-[3.8rem] sm:right-3.5 h-3 w-3 rotate-45 border-l border-t border-slate-200 bg-white shadow-sm"></div>
 
                   <!-- Header Dropdown -->
                   <div class="relative z-10 flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-3">
@@ -307,11 +290,11 @@
             class="overflow-hidden rounded-3xl bg-slate-900 p-5 text-white shadow-sm lg:p-7"
           >
             <div class="flex items-start justify-between gap-4">
-              <div>
+              <div class="min-w-0 flex-1">
                 <p class="text-sm font-medium text-slate-400">Login sebagai</p>
                 <h1
                   id="dashboardUserName"
-                  class="mt-1 text-2xl font-black lg:text-3xl"
+                  class="mt-1 truncate text-2xl font-black lg:text-3xl"
                 >
                   -
                 </h1>
@@ -419,22 +402,22 @@
             <button
               id="scanCameraButton"
               type="button"
-              class="mb-4 flex min-h-16 w-full items-center justify-between rounded-2xl bg-slate-900 p-4 text-left text-white transition hover:bg-slate-800 active:scale-[.99]"
+              class="mb-4 flex min-h-16 w-full items-center justify-between rounded-2xl bg-slate-900 p-3.5 sm:p-4 text-left text-white transition hover:bg-slate-800 active:scale-[.99]"
             >
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-3 min-w-0">
                 <div
-                  class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600"
+                  class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-600"
                 >
                   <i data-lucide="scan-barcode" class="h-6 w-6"></i>
                 </div>
-                <div>
-                  <p class="font-black">Scan Barcode</p>
-                  <p class="mt-0.5 text-xs text-slate-400">
+                <div class="min-w-0">
+                  <p class="font-black truncate">Scan Barcode</p>
+                  <p class="mt-0.5 text-xs text-slate-400 truncate">
                     Gunakan kamera belakang HP
                   </p>
                 </div>
               </div>
-              <i data-lucide="camera" class="h-5 w-5 text-slate-400"></i>
+              <i data-lucide="camera" class="h-5 w-5 shrink-0 ml-2 text-slate-400"></i>
             </button>
             <div class="my-4 flex items-center gap-3">
               <div class="h-px flex-1 bg-slate-200"></div>
@@ -463,9 +446,9 @@
                 <button
                   id="searchButton"
                   type="submit"
-                  class="flex h-14 shrink-0 items-center justify-center gap-2 rounded-2xl bg-red-600 px-5 font-bold text-white transition hover:bg-red-700 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60"
+                  class="flex h-14 shrink-0 items-center justify-center gap-2 rounded-2xl bg-red-600 px-4 sm:px-5 font-bold text-white transition hover:bg-red-700 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <i data-lucide="search" class="h-5 w-5"></i
+                  <i data-lucide="search" class="h-5 w-5 shrink-0"></i
                   ><span class="hidden sm:inline">Cari</span>
                 </button>
               </div>
@@ -545,14 +528,14 @@
           <div
             class="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:p-6"
           >
-            <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-              <div class="flex items-start gap-3">
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="flex items-start gap-3 min-w-0">
                 <div
                   class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600"
                 >
                   <i data-lucide="arrow-left-right" class="h-6 w-6"></i>
                 </div>
-                <div>
+                <div class="min-w-0">
                   <h1 class="text-xl font-black">Movement Barang</h1>
                   <p class="mt-1 text-sm leading-5 text-slate-500">
                     Catat barang masuk, keluar, atau pindah lokasi.
@@ -562,7 +545,7 @@
               <button
                 id="btnOpenBulkFromMovement"
                 type="button"
-                class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 active:scale-95"
+                class="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 active:scale-95"
               >
                 <i data-lucide="file-spreadsheet" class="h-4 w-4 text-emerald-600"></i>
                 <span>Bulk Upload CSV</span>
@@ -739,13 +722,13 @@
                 <i data-lucide="circle-check" class="h-5 w-5"></i>
               </div>
               <div class="min-w-0 flex-1">
-                <div class="flex items-center justify-between gap-2">
+                <div class="flex flex-wrap items-center justify-between gap-2">
                   <h3 id="movementSuccessTitle" class="text-sm font-black text-emerald-900">
                     Movement berhasil dicatat
                   </h3>
                   <span
                     id="movementSuccessBadge"
-                    class="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800"
+                    class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800"
                   >
                     <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-600"></span>
                     <span id="movementSuccessBadgeText">Menyinkronkan...</span>
@@ -786,7 +769,7 @@
       </main>
 
       <nav
-        class="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white lg:hidden"
+        class="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white lg:hidden"
       >
         <div class="grid grid-cols-4">
           <button
@@ -809,7 +792,8 @@
     <div id="scannerModal" class="fixed inset-0 z-[500] hidden bg-slate-950">
       <div class="flex min-h-[100dvh] flex-col">
         <div
-          class="flex h-16 shrink-0 items-center justify-between px-4 text-white"
+          class="flex shrink-0 items-center justify-between px-4 text-white"
+          style="padding-top: env(safe-area-inset-top, 0px); min-height: calc(4rem + env(safe-area-inset-top, 0px));"
         >
           <div>
             <p class="text-xs text-slate-400">StockFlow</p>
@@ -854,33 +838,33 @@
         class="relative flex max-h-[90vh] w-full max-w-lg flex-col rounded-3xl bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
       >
         <!-- Modal Header -->
-        <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-          <div class="flex items-center gap-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+        <div class="flex items-center justify-between border-b border-slate-100 px-4 sm:px-6 py-4">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
               <i data-lucide="file-spreadsheet" class="h-5 w-5"></i>
             </div>
-            <div>
-              <h3 class="font-black text-slate-900">Bulk Upload Stock</h3>
-              <p class="text-xs text-slate-400">Impor data stok via file CSV</p>
+            <div class="min-w-0">
+              <h3 class="font-black text-slate-900 truncate">Bulk Upload Stock</h3>
+              <p class="text-xs text-slate-400 truncate">Impor data stok via file CSV</p>
             </div>
           </div>
           <button
             id="bulkModalCloseBtn"
             type="button"
-            class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-400 hover:text-slate-600 active:scale-95"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-400 hover:text-slate-600 active:scale-95"
           >
             <i data-lucide="x" class="h-5 w-5"></i>
           </button>
         </div>
 
         <!-- Modal Body -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-5">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
           <!-- Pilihan Mode Upload -->
           <div>
             <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
               Mode Perhitungan Stok
             </label>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label
                 class="flex cursor-pointer flex-col rounded-2xl border-2 border-emerald-600 bg-emerald-50/40 p-3.5 transition"
                 id="labelModeAdd"
@@ -921,9 +905,9 @@
           </div>
 
           <!-- Panduan Format & Download Template -->
-          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <div class="flex items-start justify-between gap-3">
-              <div>
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 overflow-hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="min-w-0">
                 <p class="text-xs font-bold text-slate-700">Format Kolom CSV Wajib</p>
                 <p class="mt-0.5 font-mono text-xs font-bold text-emerald-700">
                   sku,location,qty
@@ -935,7 +919,7 @@
               <button
                 id="bulkDownloadTemplateBtn"
                 type="button"
-                class="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-95"
+                class="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-95"
               >
                 <i data-lucide="download" class="h-3.5 w-3.5 text-slate-500"></i>
                 <span>Download Template</span>
@@ -1017,11 +1001,11 @@
         </div>
 
         <!-- Modal Footer -->
-        <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-6 py-4">
+        <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-4 sm:px-6 py-3.5 sm:py-4">
           <button
             id="bulkModalCancelBtn"
             type="button"
-            class="h-11 rounded-xl px-4 text-xs font-bold text-slate-500 hover:bg-slate-100 transition active:scale-95"
+            class="h-11 flex-1 sm:flex-initial rounded-xl px-4 text-xs font-bold text-slate-500 hover:bg-slate-100 transition active:scale-95"
           >
             Batal
           </button>
@@ -1029,7 +1013,7 @@
             id="bulkSubmitBtn"
             type="button"
             disabled
-            class="flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-xs font-bold text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+            class="flex h-11 flex-1 sm:flex-initial items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-xs font-bold text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <i data-lucide="upload" class="h-4 w-4"></i>
             <span id="bulkSubmitLabel">Upload & Validasi</span>
@@ -1162,7 +1146,7 @@
         </div>
 
         <!-- Body Modal (Scrollable) -->
-        <div class="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+        <div class="flex-1 overflow-y-auto px-4 sm:px-6 py-5 space-y-5">
           <!-- Card Ringkasan Lokasi & Stok -->
           <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <div class="flex items-center justify-between">
@@ -1229,32 +1213,34 @@
             </div>
 
             <!-- Quick Preset Pills -->
-            <div class="mt-3 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                data-qm-preset="1"
-                class="qm-preset-btn rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 active:scale-95"
-              >
-                +1
-              </button>
-              <button
-                type="button"
-                data-qm-preset="5"
-                class="qm-preset-btn rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 active:scale-95"
-              >
-                +5
-              </button>
-              <button
-                type="button"
-                data-qm-preset="10"
-                class="qm-preset-btn rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 active:scale-95"
-              >
-                +10
-              </button>
+            <div class="mt-3 flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5 sm:gap-2">
+                <button
+                  type="button"
+                  data-qm-preset="1"
+                  class="qm-preset-btn rounded-xl border border-slate-200 bg-slate-50 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 active:scale-95"
+                >
+                  +1
+                </button>
+                <button
+                  type="button"
+                  data-qm-preset="5"
+                  class="qm-preset-btn rounded-xl border border-slate-200 bg-slate-50 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 active:scale-95"
+                >
+                  +5
+                </button>
+                <button
+                  type="button"
+                  data-qm-preset="10"
+                  class="qm-preset-btn rounded-xl border border-slate-200 bg-slate-50 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 active:scale-95"
+                >
+                  +10
+                </button>
+              </div>
               <button
                 id="qmBtnAllStock"
                 type="button"
-                class="ml-auto rounded-xl border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-800 transition hover:bg-slate-200 active:scale-95"
+                class="shrink-0 rounded-xl border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-800 transition hover:bg-slate-200 active:scale-95"
               >
                 Ambil Semua
               </button>
@@ -1314,21 +1300,21 @@
         </div>
 
         <!-- Footer Modal (Aksi) -->
-        <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/70 px-6 py-4 pb-8 sm:pb-4">
+        <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/70 px-4 sm:px-6 py-3.5 sm:py-4 pb-[calc(1.25rem+env(safe-area-inset-bottom,0.5rem))] sm:pb-4">
           <button
             id="qmCancelBtn"
             type="button"
-            class="h-12 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-600 transition hover:bg-slate-100 active:scale-95 sm:flex-initial sm:px-6"
+            class="h-12 flex-1 rounded-2xl border border-slate-200 bg-white px-3 sm:px-6 text-xs font-black text-slate-600 transition hover:bg-slate-100 active:scale-95 sm:flex-initial"
           >
             Batal
           </button>
           <button
             id="qmSubmitBtn"
             type="button"
-            class="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-red-600 px-6 text-xs font-black text-white shadow-md transition hover:bg-red-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial"
+            class="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-red-600 px-4 sm:px-6 text-xs font-black text-white shadow-md transition hover:bg-red-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial min-w-0"
           >
-            <i data-lucide="check" class="h-4 w-4"></i>
-            <span id="qmSubmitLabel">Konfirmasi Ambil</span>
+            <i data-lucide="check" class="h-4 w-4 shrink-0"></i>
+            <span id="qmSubmitLabel" class="truncate">Konfirmasi Ambil</span>
           </button>
         </div>
       </div>
@@ -1337,16 +1323,16 @@
     <!-- Offline Queue Banner (Floating Sync Pill) -->
     <div
       id="offlineQueueBanner"
-      class="fixed bottom-20 left-4 right-4 z-40 mx-auto hidden max-w-md rounded-2xl border border-amber-200 bg-amber-50/95 p-3 shadow-lg shadow-amber-200/40 backdrop-blur-sm transition-all sm:bottom-6"
+      class="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] left-4 right-4 z-40 mx-auto hidden max-w-md rounded-2xl border border-amber-200 bg-amber-50/95 p-3 shadow-lg shadow-amber-200/40 backdrop-blur-sm transition-all sm:bottom-6"
     >
       <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-2.5 text-xs font-bold text-amber-900">
+        <div class="flex items-center gap-2.5 text-xs font-bold text-amber-900 min-w-0">
           <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-200 text-amber-800">
             <i data-lucide="cloud-off" class="h-4 w-4"></i>
           </div>
           <div class="min-w-0">
             <p class="truncate"><strong id="offlineQueueCount">0</strong> movement tersimpan di HP</p>
-            <p class="text-[10px] font-medium text-amber-700">Menunggu sinyal internet untuk sync</p>
+            <p class="truncate text-[10px] font-medium text-amber-700">Menunggu sinyal internet untuk sync</p>
           </div>
         </div>
         <button
@@ -1368,7 +1354,7 @@
       aria-modal="true"
     >
       <div class="w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-slate-200">
-        <div class="p-6 text-center">
+        <div class="p-5 sm:p-6 text-center">
           <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-red-100 text-red-600 shadow-md shadow-red-100">
             <i data-lucide="triangle-alert" class="h-8 w-8"></i>
           </div>
@@ -1380,26 +1366,26 @@
           </p>
           <div
             id="errorModalDetail"
-            class="mt-3 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700"
+            class="mt-3 truncate rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700"
           >
             SKU -
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-2 border-t border-slate-100 bg-slate-50 p-4">
+        <div class="grid grid-cols-2 gap-2 border-t border-slate-100 bg-slate-50 p-3 sm:p-4">
           <button
             id="errorModalCloseBtn"
             type="button"
-            class="flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-600 transition hover:bg-slate-100 active:scale-95"
+            class="flex h-12 min-w-0 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-600 transition hover:bg-slate-100 active:scale-95"
           >
-            Tutup
+            <span class="truncate">Tutup</span>
           </button>
           <button
             id="errorModalRetryBtn"
             type="button"
-            class="flex h-12 items-center justify-center gap-1.5 rounded-2xl bg-red-600 px-4 text-xs font-black text-white shadow-md shadow-red-200 transition hover:bg-red-700 active:scale-95"
+            class="flex h-12 min-w-0 items-center justify-center gap-1.5 rounded-2xl bg-red-600 px-3 text-xs font-black text-white shadow-md shadow-red-200 transition hover:bg-red-700 active:scale-95"
           >
-            <i data-lucide="refresh-cw" class="h-4 w-4"></i>
-            <span>Coba Lagi</span>
+            <i data-lucide="refresh-cw" class="h-4 w-4 shrink-0"></i>
+            <span class="truncate">Coba Lagi</span>
           </button>
         </div>
       </div>
@@ -1417,7 +1403,7 @@
     <script src="./js/api.js?v=4"></script>
     <script src="./js/auth.js?v=4"></script>
     <script src="./js/scanner.js?v=4"></script>
-    <script src="./js/app.js?v=14"></script>
+    <script src="./js/app.js?v=15"></script>
     <script src="./js/movement.js?v=6"></script>
     <script src="./js/bulk-upload.js?v=1"></script>
   </body>

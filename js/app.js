@@ -350,6 +350,7 @@ function renderLocations(locations) {
   locations.forEach((location) => {
     const card = document.createElement("div");
     card.className = `
+      overflow-hidden
       rounded-2xl
       border
       border-slate-200
@@ -368,13 +369,13 @@ function renderLocations(locations) {
     const qty = formatNumber(rawQty);
 
     card.innerHTML = `
-      <div class="flex items-start justify-between gap-4">
-        <div class="flex min-w-0 gap-3">
+      <div class="flex items-start justify-between gap-3 sm:gap-4">
+        <div class="flex min-w-0 items-start gap-3">
           <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
-            <i data-lucide="map-pin" class="h-5 w-5"></i>
+            <i data-lucide="map-pin" class="h-5 w-5 shrink-0"></i>
           </div>
           <div class="min-w-0">
-            <h3 class="truncate text-lg font-black text-slate-900">${locationCode}</h3>
+            <h3 class="truncate text-base sm:text-lg font-black text-slate-900">${locationCode}</h3>
             <div class="mt-2 flex flex-wrap gap-1.5">
               <span class="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-600">
                 Zone ${zone}
@@ -389,7 +390,7 @@ function renderLocations(locations) {
           </div>
         </div>
         <div class="shrink-0 text-right">
-          <p class="text-2xl font-black text-slate-900">${qty}</p>
+          <p class="text-xl sm:text-2xl font-black text-slate-900">${qty}</p>
           <p class="text-xs font-medium text-slate-400">pcs</p>
         </div>
       </div>
@@ -399,21 +400,21 @@ function renderLocations(locations) {
         <div class="grid grid-cols-2 gap-2">
           <button
             type="button"
-            class="btn-quick-out flex h-11 items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 text-xs font-black text-red-700 transition hover:bg-red-100 active:scale-95"
+            class="btn-quick-out flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-2 text-xs font-black text-red-700 transition hover:bg-red-100 active:scale-95"
             data-location="${locationCode}"
             data-qty="${rawQty}"
           >
-            <i data-lucide="arrow-up-right" class="h-4 w-4"></i>
-            <span>Ambil</span>
+            <i data-lucide="arrow-up-right" class="h-4 w-4 shrink-0"></i>
+            <span class="truncate">Ambil</span>
           </button>
           <button
             type="button"
-            class="btn-quick-move flex h-11 items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 text-xs font-black text-blue-700 transition hover:bg-blue-100 active:scale-95"
+            class="btn-quick-move flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-2 text-xs font-black text-blue-700 transition hover:bg-blue-100 active:scale-95"
             data-location="${locationCode}"
             data-qty="${rawQty}"
           >
-            <i data-lucide="arrow-left-right" class="h-4 w-4"></i>
-            <span>Pindah</span>
+            <i data-lucide="arrow-left-right" class="h-4 w-4 shrink-0"></i>
+            <span class="truncate">Pindah</span>
           </button>
         </div>
       </div>
@@ -1469,10 +1470,10 @@ function openQuickMovementModal(mode, locationCode, availableQty) {
 
     if (submitBtn) {
       submitBtn.className =
-        "flex h-12 flex-1 sm:flex-initial items-center justify-center gap-2 rounded-2xl bg-red-600 px-6 text-xs font-black text-white shadow-md shadow-red-200 transition hover:bg-red-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50";
+        "flex h-12 flex-1 sm:flex-initial items-center justify-center gap-2 rounded-2xl bg-red-600 px-4 sm:px-6 text-xs font-black text-white shadow-md shadow-red-200 transition hover:bg-red-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 min-w-0";
       submitBtn.innerHTML = `
-        <i data-lucide="check" class="h-4 w-4"></i>
-        <span id="qmSubmitLabel">Konfirmasi Ambil</span>
+        <i data-lucide="check" class="h-4 w-4 shrink-0"></i>
+        <span id="qmSubmitLabel" class="truncate">Konfirmasi Ambil</span>
       `;
     }
   } else {
@@ -1488,10 +1489,10 @@ function openQuickMovementModal(mode, locationCode, availableQty) {
 
     if (submitBtn) {
       submitBtn.className =
-        "flex h-12 flex-1 sm:flex-initial items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 text-xs font-black text-white shadow-md shadow-blue-200 transition hover:bg-blue-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50";
+        "flex h-12 flex-1 sm:flex-initial items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 sm:px-6 text-xs font-black text-white shadow-md shadow-blue-200 transition hover:bg-blue-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 min-w-0";
       submitBtn.innerHTML = `
-        <i data-lucide="check" class="h-4 w-4"></i>
-        <span id="qmSubmitLabel">Konfirmasi Pindah</span>
+        <i data-lucide="check" class="h-4 w-4 shrink-0"></i>
+        <span id="qmSubmitLabel" class="truncate">Konfirmasi Pindah</span>
       `;
     }
   }
@@ -1565,8 +1566,8 @@ function setQmLoading(loading) {
           ? "Konfirmasi Ambil"
           : "Konfirmasi Pindah";
       submitBtn.innerHTML = `
-        <i data-lucide="check" class="h-4 w-4"></i>
-        <span id="qmSubmitLabel">${label}</span>
+        <i data-lucide="check" class="h-4 w-4 shrink-0"></i>
+        <span id="qmSubmitLabel" class="truncate">${label}</span>
       `;
       if (window.lucide) {
         window.lucide.createIcons();

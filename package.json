@@ -1,0 +1,14 @@
+{
+  "name": "stockflow-wms",
+  "version": "1.0.0",
+  "description": "StockFlow Warehouse Management System - Mobile First Scanner & Movement",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./css/tailwind-input.css -o ./css/tailwind.min.css --minify",
+    "watch:css": "tailwindcss -i ./css/tailwind-input.css -o ./css/tailwind.min.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17",
+    "tailwindcss-animate": "^1.0.7"
+  }
+}
