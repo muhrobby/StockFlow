@@ -10,6 +10,9 @@ const AppState = {
   lastSearch: null,
 };
 
+// In-Memory Search Cache untuk pencarian kilat (0 ms)
+const SearchCache = new Map();
+
 /* =========================================
    INIT
 ========================================= */
@@ -20,6 +23,8 @@ function initApp() {
   lucide.createIcons();
 
   Scanner.init();
+
+  QueueManager.init();
 
   bindEvents();
 
@@ -56,6 +61,24 @@ function bindEvents() {
   });
 
   bindQuickMovementEvents();
+
+  // Offline Queue & Error Modal Events
+  document
+    .getElementById("offlineQueueSyncBtn")
+    ?.addEventListener("click", () => {
+      QueueManager.processQueue();
+    });
+
+  document
+    .getElementById("errorModalCloseBtn")
+    ?.addEventListener("click", () => {
+      closeErrorModal();
+    });
+
+  window.addEventListener("online", () => {
+    showToast("Koneksi online kembali. Menyinkronkan...");
+    QueueManager.processQueue();
+  });
 }
 
 /* =========================================
@@ -200,16 +223,31 @@ async function handleOpenScanner() {
    EXECUTE SEARCH
 ========================================= */
 
-async function executeSearch(sku) {
+async function executeSearch(sku, options = {}) {
   if (AppState.searchLoading) {
     return;
   }
 
   hideSearchError();
 
-  clearSearchResult();
+  // 1. Cek In-Memory Cache untuk respon instan (0 ms)
+  if (options.skipCache !== true && SearchCache.has(sku)) {
+    const cached = SearchCache.get(sku);
+    if (Date.now() - cached.timestamp < 300000) { // 5 menit
+      AppState.lastSearch = cached.item;
+      renderSearchResult(cached.item);
 
-  setSearchLoading(true);
+      // Jika tidak diminta background sync, langsung selesai (0 ms)
+      if (!options.backgroundSync) {
+        return;
+      }
+    }
+  }
+
+  if (!options.silent) {
+    clearSearchResult();
+    setSearchLoading(true);
+  }
 
   try {
     const result = await Api.post("/warehouse/search", {
@@ -225,16 +263,20 @@ async function executeSearch(sku) {
     }
 
     AppState.lastSearch = result.item;
+    SearchCache.set(sku, { item: result.item, timestamp: Date.now() });
 
     renderSearchResult(result.item);
   } catch (error) {
     console.error("Search error:", error);
 
-    clearSearchResult();
-
-    showSearchError(error.message || "Terjadi kesalahan saat mencari barang.");
+    if (!options.silent) {
+      clearSearchResult();
+      showSearchError(error.message || "Terjadi kesalahan saat mencari barang.");
+    }
   } finally {
-    setSearchLoading(false);
+    if (!options.silent) {
+      setSearchLoading(false);
+    }
   }
 }
 
@@ -691,6 +733,8 @@ async function logout() {
 
   AppState.lastSearch = null;
 
+  SearchCache.clear();
+
   document.getElementById("nikInput").value = "";
 
   document.getElementById("skuInput").value = "";
@@ -797,6 +841,209 @@ function showToast(message) {
   window.__warehouseToast = setTimeout(() => {
     toast.classList.add("hidden");
   }, 2500);
+}
+
+/* =========================================
+   OFFLINE QUEUE MANAGER (Option 2)
+========================================= */
+
+const QueueManager = {
+  STORAGE_KEY: "stockflow_pending_movements",
+  isProcessing: false,
+
+  init() {
+    this.updateBanner();
+    if (navigator.onLine && this.getQueue().length > 0) {
+      setTimeout(() => this.processQueue(), 1200);
+    }
+  },
+
+  getQueue() {
+    try {
+      return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  },
+
+  saveQueue(queue) {
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(queue));
+    this.updateBanner();
+  },
+
+  enqueue(payload, backupState) {
+    const queue = this.getQueue();
+    const exists = queue.some(
+      (q) =>
+        q.payload.sku === payload.sku &&
+        q.payload.type === payload.type &&
+        q.payload.qty === payload.qty &&
+        q.payload.from_location === payload.from_location &&
+        q.payload.to_location === payload.to_location &&
+        Date.now() - q.timestamp < 30000
+    );
+    if (exists) return null;
+
+    const item = {
+      id: "Q_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
+      payload,
+      backupState,
+      timestamp: Date.now(),
+    };
+    queue.push(item);
+    this.saveQueue(queue);
+    return item.id;
+  },
+
+  dequeue(id) {
+    const queue = this.getQueue().filter((item) => item.id !== id);
+    this.saveQueue(queue);
+  },
+
+  updateBanner() {
+    const queue = this.getQueue();
+    const banner = document.getElementById("offlineQueueBanner");
+    const countEl = document.getElementById("offlineQueueCount");
+    if (!banner) return;
+
+    if (queue.length > 0) {
+      if (countEl) countEl.textContent = queue.length;
+      banner.classList.remove("hidden");
+      if (window.lucide) lucide.createIcons();
+    } else {
+      banner.classList.add("hidden");
+    }
+  },
+
+  async processQueue() {
+    if (this.isProcessing) return;
+
+    const queue = this.getQueue();
+    if (queue.length === 0) return;
+
+    if (!navigator.onLine) {
+      showToast("Perangkat masih offline. Menunggu koneksi internet...");
+      return;
+    }
+
+    this.isProcessing = true;
+    const syncBtn = document.getElementById("offlineQueueSyncBtn");
+    if (syncBtn) {
+      syncBtn.disabled = true;
+      syncBtn.innerHTML = `
+        <div class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white"></div>
+        <span>Sync...</span>
+      `;
+    }
+
+    showToast(`Mengirim ${queue.length} movement tertunda...`);
+
+    let successCount = 0;
+    for (const item of [...queue]) {
+      try {
+        const result = await Api.post("/warehouse/movement", item.payload);
+        if (result && result.success === true) {
+          this.dequeue(item.id);
+          successCount++;
+        } else {
+          this.dequeue(item.id);
+          openErrorModal({
+            title: "Movement Tertunda Ditolak",
+            message: result?.message || "Stok di server tidak mencukupi saat disinkronkan.",
+            payload: item.payload,
+            canRetry: false,
+          });
+        }
+      } catch (err) {
+        console.error("Queue item sync error:", err);
+        break;
+      }
+    }
+
+    if (syncBtn) {
+      syncBtn.disabled = false;
+      syncBtn.innerHTML = `
+        <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
+        <span>Kirim</span>
+      `;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    this.isProcessing = false;
+    this.updateBanner();
+
+    if (successCount > 0) {
+      showToast(`Sukses menyinkronkan ${successCount} movement!`);
+      if (AppState.lastSearch?.sku) {
+        executeSearch(AppState.lastSearch.sku, { backgroundSync: true, silent: true });
+      }
+    }
+  },
+};
+
+/* =========================================
+   MOVEMENT ERROR MODAL (Option 1)
+========================================= */
+
+function openErrorModal({
+  title,
+  message,
+  payload,
+  onRetry,
+  canRetry = true,
+  retryLabel = "Coba Lagi",
+}) {
+  const modal = document.getElementById("movementErrorModal");
+  if (!modal) return;
+
+  const titleEl = document.getElementById("errorModalTitle");
+  const msgEl = document.getElementById("errorModalMessage");
+  const detailEl = document.getElementById("errorModalDetail");
+  const retryBtn = document.getElementById("errorModalRetryBtn");
+
+  if (titleEl) titleEl.textContent = title || "Transaksi Gagal Disimpan";
+  if (msgEl) msgEl.textContent = message || "Terjadi kesalahan saat menyimpan ke server.";
+
+  if (detailEl && payload) {
+    const loc = payload.from_location
+      ? `${payload.from_location} → ${payload.to_location || "Keluar"}`
+      : payload.to_location || "-";
+    detailEl.textContent = `SKU ${payload.sku} · Qty ${payload.qty} pcs · ${loc}`;
+    detailEl.classList.remove("hidden");
+  } else if (detailEl) {
+    detailEl.classList.add("hidden");
+  }
+
+  if (retryBtn) {
+    if (canRetry && typeof onRetry === "function") {
+      retryBtn.classList.remove("hidden");
+      retryBtn.innerHTML = `
+        <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+        <span>${retryLabel}</span>
+      `;
+      retryBtn.onclick = () => {
+        closeErrorModal();
+        onRetry();
+      };
+    } else {
+      retryBtn.classList.add("hidden");
+    }
+  }
+
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+  document.body.style.overflow = "hidden";
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeErrorModal() {
+  const modal = document.getElementById("movementErrorModal");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+  document.body.style.overflow = "";
 }
 
 /* =========================================
@@ -1135,38 +1382,151 @@ async function handleQuickMovementSubmit() {
     nik,
   };
 
-  setQmLoading(true);
+  // =========================================================
+  // 1. BACKUP CURRENT SEARCH STATE (for rollback on error)
+  // =========================================================
+  const backupSearchState = JSON.parse(JSON.stringify(AppState.lastSearch || {}));
 
-  try {
-    const result = await Api.post("/warehouse/movement", payload);
-
-    if (!result || result.success !== true) {
-      throw new Error(result?.message || "Transaksi movement gagal.");
-    }
-
-    // Haptic Vibrate Feedback
-    if (navigator.vibrate) {
-      navigator.vibrate([60, 40, 60]);
-    }
-
-    // Tutup Modal
-    closeQuickMovementModal();
-
-    // Tampilkan Toast Feedback
+  // =========================================================
+  // 2. OPTIMISTIC UI: UPDATE LOCAL STATE IMMEDIATELY (0 ms)
+  // =========================================================
+  if (AppState.lastSearch && Array.isArray(AppState.lastSearch.locations)) {
     if (mode === "OUT") {
-      showToast(`Berhasil mengeluarkan ${qty} pcs dari ${fromLocation}`);
-    } else {
-      showToast(`Berhasil memindahkan ${qty} pcs (${fromLocation} → ${toLocation})`);
+      for (const loc of AppState.lastSearch.locations) {
+        if (loc.location_code === fromLocation) {
+          loc.qty = Math.max(0, Number(loc.qty || 0) - qty);
+        }
+      }
+    } else if (mode === "MOVE") {
+      for (const loc of AppState.lastSearch.locations) {
+        if (loc.location_code === fromLocation) {
+          loc.qty = Math.max(0, Number(loc.qty || 0) - qty);
+        }
+      }
+      let destLoc = AppState.lastSearch.locations.find(
+        (l) => l.location_code === toLocation
+      );
+      if (destLoc) {
+        destLoc.qty = Number(destLoc.qty || 0) + qty;
+      } else {
+        const parts = toLocation.split("-");
+        AppState.lastSearch.locations.push({
+          location_code: toLocation,
+          zone: parts[0] || "-",
+          section: parts[1] || "-",
+          position: parts.slice(2).join("-") || "-",
+          qty: qty,
+        });
+      }
     }
 
-    // AUTO-REFRESH: Panggil ulang pencarian SKU untuk menyegarkan data stok secara realtime
-    await executeSearch(sku);
-  } catch (error) {
-    console.error("Quick movement submit error:", error);
-    showQmError(error.message || "Terjadi kesalahan saat memproses movement.");
-  } finally {
-    setQmLoading(false);
+    // Filter out locations with 0 qty
+    AppState.lastSearch.locations = AppState.lastSearch.locations.filter(
+      (l) => Number(l.qty || 0) > 0
+    );
+
+    // Recalculate total stock
+    AppState.lastSearch.total_stock = AppState.lastSearch.locations.reduce(
+      (sum, l) => sum + Number(l.qty || 0),
+      0
+    );
+
+    // Update in-memory SearchCache
+    SearchCache.set(sku, { item: AppState.lastSearch, timestamp: Date.now() });
+
+    // Render immediately! (0 ms latency)
+    renderSearchResult(AppState.lastSearch);
   }
+
+  // =========================================================
+  // 3. INSTANT OPERATOR FEEDBACK (0 ms)
+  // =========================================================
+  if (navigator.vibrate) {
+    navigator.vibrate([60, 40, 60]);
+  }
+
+  closeQuickMovementModal();
+
+  if (mode === "OUT") {
+    showToast(`Berhasil mengeluarkan ${qty} pcs dari ${fromLocation}`);
+  } else {
+    showToast(`Berhasil memindahkan ${qty} pcs (${fromLocation} → ${toLocation})`);
+  }
+
+  // =========================================================
+  // 4. DISPATCH API IN BACKGROUND OR QUEUE OFFLINE
+  // =========================================================
+  if (!navigator.onLine) {
+    QueueManager.enqueue(payload, backupSearchState);
+    showToast("Offline: Tersimpan di memori HP & akan otomatis dikirim saat online");
+    return;
+  }
+
+  function sendMovement() {
+    return Api.post("/warehouse/movement", payload)
+      .then((result) => {
+        if (!result || result.success !== true) {
+          throw new Error(result?.message || "Transaksi movement ditolak server.");
+        }
+        // Background sync sukses! Sinkronkan cache secara silent
+        executeSearch(sku, { backgroundSync: true, silent: true });
+      })
+      .catch((error) => {
+        console.error("Quick movement background error:", error);
+
+        const isNetworkErr =
+          !navigator.onLine ||
+          error.name === "AbortError" ||
+          String(error.message || "").toLowerCase().includes("terlalu lama") ||
+          String(error.message || "").toLowerCase().includes("network") ||
+          String(error.message || "").toLowerCase().includes("failed to fetch");
+
+        if (isNetworkErr) {
+          // Masukkan ke offline queue agar otomatis dicoba saat online
+          QueueManager.enqueue(payload, backupSearchState);
+
+          if (navigator.vibrate) {
+            navigator.vibrate([150, 75, 150]);
+          }
+
+          openErrorModal({
+            title: "Koneksi Terputus (Offline)",
+            message:
+              "Sinyal internet tidak stabil. Data telah otomatis disimpan di memori HP Anda dan akan dikirim saat online.",
+            payload,
+            canRetry: true,
+            retryLabel: "Coba Sekarang",
+            onRetry: () => {
+              showToast("Mencoba kirim ulang...");
+              sendMovement();
+            },
+          });
+        } else {
+          // Business error: Stok tidak cukup atau ditolak server
+          // Wajib rollback ke kondisi sebelum transaksi
+          if (AppState.lastSearch && AppState.lastSearch.sku === sku) {
+            AppState.lastSearch = backupSearchState;
+            SearchCache.set(sku, { item: backupSearchState, timestamp: Date.now() });
+            renderSearchResult(backupSearchState);
+          }
+
+          if (navigator.vibrate) {
+            navigator.vibrate([250, 100, 250, 100, 250]);
+          }
+
+          openErrorModal({
+            title: "Transaksi Ditolak Server",
+            message:
+              error.message ||
+              "Stok di server tidak mencukupi atau sudah berubah. Angka stok di layar telah dikembalikan ke kondisi semula.",
+            payload,
+            canRetry: false,
+          });
+        }
+      });
+  }
+
+  sendMovement();
 }
 
 
