@@ -1012,9 +1012,9 @@ const SyncTracker = {
   bindEvents() {
     const btnOpen = document.getElementById("btnOpenSyncTray");
     const banner = document.getElementById("offlineQueueBanner");
+    const backdrop = document.getElementById("syncTrayBackdrop");
     const modal = document.getElementById("syncActivityModal");
     const btnClose = document.getElementById("btnCloseSyncModal");
-    const btnCloseFooter = document.getElementById("btnCloseSyncFooter");
     const btnSyncAll = document.getElementById("btnSyncAllPending");
     const btnClearRecent = document.getElementById("btnClearRecentSync");
 
@@ -1022,7 +1022,7 @@ const SyncTracker = {
       btnOpen.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.openModal();
+        this.toggleModal();
       });
     }
 
@@ -1033,6 +1033,13 @@ const SyncTracker = {
       });
     }
 
+    if (backdrop) {
+      backdrop.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.closeModal();
+      });
+    }
+
     if (btnClose) {
       btnClose.addEventListener("click", (e) => {
         e.preventDefault();
@@ -1040,20 +1047,11 @@ const SyncTracker = {
       });
     }
 
-    if (btnCloseFooter) {
-      btnCloseFooter.addEventListener("click", (e) => {
-        e.preventDefault();
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this.isModalOpen) {
         this.closeModal();
-      });
-    }
-
-    if (modal) {
-      modal.addEventListener("click", (e) => {
-        if (e.target === modal) {
-          this.closeModal();
-        }
-      });
-    }
+      }
+    });
 
     if (btnSyncAll) {
       btnSyncAll.addEventListener("click", (e) => {
@@ -1072,13 +1070,24 @@ const SyncTracker = {
     }
   },
 
+  toggleModal() {
+    if (this.isModalOpen) {
+      this.closeModal();
+    } else {
+      this.openModal();
+    }
+  },
+
   openModal() {
     const modal = document.getElementById("syncActivityModal");
+    const backdrop = document.getElementById("syncTrayBackdrop");
     if (!modal) return;
     this.isModalOpen = true;
     modal.classList.remove("hidden");
     modal.classList.add("flex");
-    document.body.style.overflow = "hidden";
+    if (backdrop) {
+      backdrop.classList.remove("hidden");
+    }
     this.updateUI();
     if (window.lucide) {
       lucide.createIcons();
@@ -1087,11 +1096,14 @@ const SyncTracker = {
 
   closeModal() {
     const modal = document.getElementById("syncActivityModal");
+    const backdrop = document.getElementById("syncTrayBackdrop");
     if (!modal) return;
     this.isModalOpen = false;
     modal.classList.add("hidden");
     modal.classList.remove("flex");
-    document.body.style.overflow = "";
+    if (backdrop) {
+      backdrop.classList.add("hidden");
+    }
   },
 
   getRecent() {
