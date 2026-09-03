@@ -163,17 +163,35 @@
               </p>
               <h2 id="headerTitle" class="font-black">Dashboard</h2>
             </div>
-            <div class="hidden text-right lg:block">
-              <p id="headerUserName" class="text-sm font-bold">PIC</p>
-              <p id="headerUserNik" class="text-xs text-slate-400">-</p>
+            <div class="flex items-center gap-2">
+              <div class="hidden text-right lg:block">
+                <p id="headerUserName" class="text-sm font-bold">PIC</p>
+                <p id="headerUserNik" class="text-xs text-slate-400">-</p>
+              </div>
+              <button
+                id="btnOpenSyncTray"
+                type="button"
+                class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition hover:bg-slate-200 active:scale-95"
+                aria-label="Pusat Sinkronisasi"
+                title="Pusat Sinkronisasi & Antrean"
+              >
+                <i data-lucide="bell" class="h-5 w-5"></i>
+                <span
+                  id="syncTrayBadge"
+                  class="absolute -top-1 -right-1 hidden h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-600 px-1.5 text-[10px] font-black text-white shadow-sm ring-2 ring-white"
+                >
+                  0
+                </span>
+              </button>
+              <button
+                id="mobileLogoutButton"
+                type="button"
+                class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500 active:scale-95 lg:hidden"
+                aria-label="Keluar"
+              >
+                <i data-lucide="log-out" class="h-5 w-5"></i>
+              </button>
             </div>
-            <button
-              id="mobileLogoutButton"
-              type="button"
-              class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500 active:scale-95 lg:hidden"
-            >
-              <i data-lucide="log-out" class="h-5 w-5"></i>
-            </button>
           </div>
         </header>
 
@@ -1281,6 +1299,108 @@
           </button>
         </div>
       </div>
+    <!-- Pusat Sinkronisasi & Riwayat (Sync & Activity Center) -->
+    <div
+      id="syncActivityModal"
+      class="fixed inset-0 z-[520] hidden items-end justify-center bg-slate-950/60 p-0 backdrop-blur-sm transition-all sm:items-center sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="syncModalTitle"
+    >
+      <div
+        class="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-t-[2.5rem] bg-white shadow-2xl ring-1 ring-slate-200 transition-all sm:rounded-3xl"
+      >
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+              <i data-lucide="refresh-cw" class="h-5 w-5"></i>
+            </div>
+            <div>
+              <h3 id="syncModalTitle" class="text-base font-black text-slate-900">
+                Pusat Sinkronisasi
+              </h3>
+              <p class="text-xs font-medium text-slate-500">
+                Status pengiriman data & riwayat aktivitas
+              </p>
+            </div>
+          </div>
+          <button
+            id="btnCloseSyncModal"
+            type="button"
+            class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition hover:bg-slate-200 active:scale-95"
+            aria-label="Tutup"
+          >
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 space-y-6 overflow-y-auto px-6 py-4">
+          <!-- Pending / In-Flight Section -->
+          <div id="syncPendingSection">
+            <div class="mb-3 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-black uppercase tracking-wider text-slate-400">Sedang Diproses & Antrean</span>
+                <span id="syncPendingCountBadge" class="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-black text-blue-800">0</span>
+              </div>
+              <button
+                id="btnSyncAllPending"
+                type="button"
+                class="hidden text-xs font-bold text-blue-600 hover:text-blue-700 active:underline"
+              >
+                Sinkronkan Semua
+              </button>
+            </div>
+            <div id="syncPendingList" class="space-y-2.5">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Recently Completed Section -->
+          <div id="syncRecentSection">
+            <div class="mb-3 flex items-center justify-between">
+              <span class="text-xs font-black uppercase tracking-wider text-slate-400">Baru Saja Berhasil</span>
+              <button
+                id="btnClearRecentSync"
+                type="button"
+                class="text-[11px] font-semibold text-slate-400 hover:text-slate-600 active:underline"
+              >
+                Bersihkan Riwayat
+              </button>
+            </div>
+            <div id="syncRecentList" class="space-y-2.5">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div id="syncEmptyState" class="hidden py-10 text-center">
+            <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-3xl bg-emerald-50 text-emerald-600">
+              <i data-lucide="check-check" class="h-7 w-7"></i>
+            </div>
+            <h4 class="text-sm font-black text-slate-800">Semua Data Tersinkron</h4>
+            <p class="mx-auto mt-1 max-w-xs text-xs text-slate-400 leading-relaxed">
+              Tidak ada antrean atau transaksi yang tertunda. Seluruh pergerakan telah aman tersimpan di cloud.
+            </p>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="flex items-center justify-between border-t border-slate-100 bg-slate-50/80 px-6 py-3.5 text-xs text-slate-500">
+          <div class="flex items-center gap-2">
+            <span id="syncNetworkIndicator" class="h-2 w-2 rounded-full bg-emerald-500"></span>
+            <span id="syncNetworkText" class="font-bold text-slate-600">Online (Terhubung)</span>
+          </div>
+          <button
+            id="btnCloseSyncFooter"
+            type="button"
+            class="rounded-xl px-4 py-1.5 font-bold text-slate-700 hover:bg-slate-200 active:scale-95"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
     </div>
 
     <div
@@ -1293,8 +1413,8 @@
     <script src="./js/api.js?v=4"></script>
     <script src="./js/auth.js?v=4"></script>
     <script src="./js/scanner.js?v=4"></script>
-    <script src="./js/app.js?v=11"></script>
-    <script src="./js/movement.js?v=3"></script>
+    <script src="./js/app.js?v=12"></script>
+    <script src="./js/movement.js?v=4"></script>
     <script src="./js/bulk-upload.js?v=1"></script>
   </body>
 </html>

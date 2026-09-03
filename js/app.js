@@ -26,6 +26,8 @@ function initApp() {
 
   QueueManager.init();
 
+  SyncTracker.init();
+
   bindEvents();
 
   bootstrap();
@@ -869,6 +871,9 @@ const QueueManager = {
   saveQueue(queue) {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(queue));
     this.updateBanner();
+    if (typeof SyncTracker !== "undefined") {
+      SyncTracker.updateUI();
+    }
   },
 
   enqueue(payload, backupState) {
@@ -913,6 +918,10 @@ const QueueManager = {
     } else {
       banner.classList.add("hidden");
     }
+
+    if (typeof SyncTracker !== "undefined") {
+      SyncTracker.updateUI();
+    }
   },
 
   async processQueue() {
@@ -944,6 +953,9 @@ const QueueManager = {
         const result = await Api.post("/warehouse/movement", item.payload);
         if (result && result.success === true) {
           this.dequeue(item.id);
+          if (typeof SyncTracker !== "undefined") {
+            SyncTracker.markCompleted(item.id, item.payload, result.data);
+          }
           successCount++;
         } else {
           this.dequeue(item.id);
@@ -979,6 +991,314 @@ const QueueManager = {
       }
     }
   },
+};
+
+/* =========================================
+   SYNC TRACKER & ACTIVITY CENTER
+========================================= */
+
+const SyncTracker = {
+  STORAGE_RECENT_KEY: "stockflow_recent_synced",
+  inFlightMap: new Map(),
+  isModalOpen: false,
+
+  init() {
+    this.bindEvents();
+    this.updateUI();
+    window.addEventListener("online", () => this.handleNetworkChange(true));
+    window.addEventListener("offline", () => this.handleNetworkChange(false));
+  },
+
+  bindEvents() {
+    const btnOpen = document.getElementById("btnOpenSyncTray");
+    const banner = document.getElementById("offlineQueueBanner");
+    const modal = document.getElementById("syncActivityModal");
+    const btnClose = document.getElementById("btnCloseSyncModal");
+    const btnCloseFooter = document.getElementById("btnCloseSyncFooter");
+    const btnSyncAll = document.getElementById("btnSyncAllPending");
+    const btnClearRecent = document.getElementById("btnClearRecentSync");
+
+    if (btnOpen) {
+      btnOpen.addEventListener("click", () => this.openModal());
+    }
+
+    if (banner) {
+      banner.addEventListener("click", (e) => {
+        if (e.target.closest("#offlineQueueSyncBtn")) return;
+        this.openModal();
+      });
+    }
+
+    if (btnClose) {
+      btnClose.addEventListener("click", () => this.closeModal());
+    }
+
+    if (btnCloseFooter) {
+      btnCloseFooter.addEventListener("click", () => this.closeModal());
+    }
+
+    if (modal) {
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) {
+          this.closeModal();
+        }
+      });
+    }
+
+    if (btnSyncAll) {
+      btnSyncAll.addEventListener("click", () => {
+        if (typeof QueueManager !== "undefined") {
+          QueueManager.processQueue();
+        }
+      });
+    }
+
+    if (btnClearRecentSync) {
+      btnClearRecentSync.addEventListener("click", () => {
+        this.clearRecent();
+      });
+    }
+  },
+
+  openModal() {
+    const modal = document.getElementById("syncActivityModal");
+    if (!modal) return;
+    this.isModalOpen = true;
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    document.body.style.overflow = "hidden";
+    this.updateUI();
+  },
+
+  closeModal() {
+    const modal = document.getElementById("syncActivityModal");
+    if (!modal) return;
+    this.isModalOpen = false;
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+    document.body.style.overflow = "";
+  },
+
+  getRecent() {
+    try {
+      return JSON.parse(localStorage.getItem(this.STORAGE_RECENT_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  },
+
+  saveRecent(list) {
+    localStorage.setItem(this.STORAGE_RECENT_KEY, JSON.stringify(list.slice(0, 15)));
+  },
+
+  addInFlight(id, payload) {
+    this.inFlightMap.set(id, {
+      id,
+      payload,
+      timestamp: Date.now(),
+      status: "syncing"
+    });
+    this.updateUI();
+  },
+
+  markCompleted(id, payload, serverData) {
+    this.inFlightMap.delete(id);
+    const recent = this.getRecent();
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    recent.unshift({
+      id: serverData?.movement_id || id,
+      payload,
+      timestamp: Date.now(),
+      completedAt: timeStr
+    });
+    this.saveRecent(recent);
+    this.updateUI();
+  },
+
+  markFailed(id) {
+    this.inFlightMap.delete(id);
+    this.updateUI();
+  },
+
+  clearRecent() {
+    localStorage.removeItem(this.STORAGE_RECENT_KEY);
+    this.updateUI();
+  },
+
+  handleNetworkChange(isOnline) {
+    const ind = document.getElementById("syncNetworkIndicator");
+    const text = document.getElementById("syncNetworkText");
+    if (ind) {
+      ind.className = `h-2 w-2 rounded-full ${isOnline ? "bg-emerald-500" : "bg-amber-500"}`;
+    }
+    if (text) {
+      text.textContent = isOnline ? "Online (Terhubung)" : "Offline (Terputus)";
+      text.className = isOnline ? "font-bold text-slate-600" : "font-bold text-amber-600";
+    }
+    this.updateUI();
+  },
+
+  updateUI() {
+    const inFlightList = Array.from(this.inFlightMap.values());
+    const queueList = typeof QueueManager !== "undefined" ? QueueManager.getQueue() : [];
+    const totalPending = inFlightList.length + queueList.length;
+    const isOnline = navigator.onLine;
+
+    // 1. Update Header Bell Badge
+    const badge = document.getElementById("syncTrayBadge");
+    if (badge) {
+      if (totalPending > 0) {
+        badge.textContent = totalPending;
+        badge.classList.remove("hidden");
+        badge.classList.add("flex");
+        if (!isOnline || queueList.length > 0) {
+          badge.className = "absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-1.5 text-[10px] font-black text-white shadow-sm ring-2 ring-white";
+        } else {
+          badge.className = "absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-600 px-1.5 text-[10px] font-black text-white shadow-sm ring-2 ring-white animate-pulse";
+        }
+      } else {
+        badge.classList.add("hidden");
+        badge.classList.remove("flex");
+      }
+    }
+
+    // 2. Update Modal Pending Count & Action Button
+    const countBadge = document.getElementById("syncPendingCountBadge");
+    if (countBadge) countBadge.textContent = totalPending;
+
+    const btnSyncAll = document.getElementById("btnSyncAllPending");
+    if (btnSyncAll) {
+      if (queueList.length > 0 && isOnline) {
+        btnSyncAll.classList.remove("hidden");
+      } else {
+        btnSyncAll.classList.add("hidden");
+      }
+    }
+
+    // 3. Render Pending List
+    const pendingSection = document.getElementById("syncPendingSection");
+    const pendingListEl = document.getElementById("syncPendingList");
+    if (pendingSection && pendingListEl) {
+      if (totalPending > 0) {
+        pendingSection.classList.remove("hidden");
+        let html = "";
+
+        // In-flight items
+        for (const item of inFlightList) {
+          const typeName = { IN: "Masuk", OUT: "Keluar", MOVE: "Pindah" }[item.payload?.type] || item.payload?.type || "Movement";
+          const route = [item.payload?.from_location, item.payload?.to_location].filter(Boolean).join(" → ") || "-";
+          html += `
+            <div class="flex items-center justify-between gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                  <div class="h-4 w-4 animate-spin rounded-full border-2 border-blue-400 border-t-blue-700"></div>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="rounded-md bg-blue-200 px-1.5 py-0.5 text-[10px] font-black text-blue-900">${typeName}</span>
+                    <strong class="truncate text-xs font-black text-slate-800">SKU ${item.payload?.sku || "-"}</strong>
+                  </div>
+                  <p class="mt-0.5 truncate text-[11px] text-slate-500 font-medium">
+                    ${item.payload?.qty || 0} pcs · ${route}
+                  </p>
+                </div>
+              </div>
+              <span class="shrink-0 rounded-full bg-blue-100 px-2.5 py-1 text-[10px] font-black text-blue-700">
+                Mengirim...
+              </span>
+            </div>
+          `;
+        }
+
+        // Offline queued items
+        for (const item of queueList) {
+          const typeName = { IN: "Masuk", OUT: "Keluar", MOVE: "Pindah" }[item.payload?.type] || item.payload?.type || "Movement";
+          const route = [item.payload?.from_location, item.payload?.to_location].filter(Boolean).join(" → ") || "-";
+          html += `
+            <div class="flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50/60 p-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                  <i data-lucide="cloud-off" class="h-4 w-4"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="rounded-md bg-amber-200 px-1.5 py-0.5 text-[10px] font-black text-amber-900">${typeName}</span>
+                    <strong class="truncate text-xs font-black text-slate-800">SKU ${item.payload?.sku || "-"}</strong>
+                  </div>
+                  <p class="mt-0.5 truncate text-[11px] text-slate-500 font-medium">
+                    ${item.payload?.qty || 0} pcs · ${route}
+                  </p>
+                </div>
+              </div>
+              <span class="shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-black text-amber-800">
+                Antrean HP
+              </span>
+            </div>
+          `;
+        }
+
+        pendingListEl.innerHTML = html;
+      } else {
+        pendingSection.classList.add("hidden");
+        pendingListEl.innerHTML = "";
+      }
+    }
+
+    // 4. Render Recent Items
+    const recentList = this.getRecent();
+    const recentSection = document.getElementById("syncRecentSection");
+    const recentListEl = document.getElementById("syncRecentList");
+    if (recentSection && recentListEl) {
+      if (recentList.length > 0) {
+        recentSection.classList.remove("hidden");
+        let recentHtml = "";
+        for (const item of recentList) {
+          const typeName = { IN: "Masuk", OUT: "Keluar", MOVE: "Pindah" }[item.payload?.type] || item.payload?.type || "Movement";
+          const route = [item.payload?.from_location, item.payload?.to_location].filter(Boolean).join(" → ") || "-";
+          recentHtml += `
+            <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                  <i data-lucide="check" class="h-4 w-4"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="rounded-md bg-slate-200 px-1.5 py-0.5 text-[10px] font-black text-slate-700">${typeName}</span>
+                    <strong class="truncate text-xs font-black text-slate-800">SKU ${item.payload?.sku || "-"}</strong>
+                  </div>
+                  <p class="mt-0.5 truncate text-[11px] text-slate-500 font-medium">
+                    ${item.payload?.qty || 0} pcs · ${route} · ID: ${item.id}
+                  </p>
+                </div>
+              </div>
+              <span class="shrink-0 text-[11px] font-bold text-slate-400">
+                ${item.completedAt || ""}
+              </span>
+            </div>
+          `;
+        }
+        recentListEl.innerHTML = recentHtml;
+      } else {
+        recentSection.classList.add("hidden");
+        recentListEl.innerHTML = "";
+      }
+    }
+
+    // 5. Empty State
+    const emptyState = document.getElementById("syncEmptyState");
+    if (emptyState) {
+      if (totalPending === 0 && recentList.length === 0) {
+        emptyState.classList.remove("hidden");
+      } else {
+        emptyState.classList.add("hidden");
+      }
+    }
+
+    if (window.lucide) {
+      lucide.createIcons();
+    }
+  }
 };
 
 /* =========================================
@@ -1456,10 +1776,16 @@ async function handleQuickMovementSubmit() {
   // =========================================================
   // 4. DISPATCH API IN BACKGROUND OR QUEUE OFFLINE
   // =========================================================
+  const trackingId = "MOV_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4).toUpperCase();
+
   if (!navigator.onLine) {
     QueueManager.enqueue(payload, backupSearchState);
     showToast("Offline: Tersimpan di memori HP & akan otomatis dikirim saat online");
     return;
+  }
+
+  if (typeof SyncTracker !== "undefined") {
+    SyncTracker.addInFlight(trackingId, payload);
   }
 
   function sendMovement() {
@@ -1468,10 +1794,16 @@ async function handleQuickMovementSubmit() {
         if (!result || result.success !== true) {
           throw new Error(result?.message || "Transaksi movement ditolak server.");
         }
+        if (typeof SyncTracker !== "undefined") {
+          SyncTracker.markCompleted(trackingId, payload, result.data);
+        }
         // Background sync sukses! Sinkronkan cache secara silent
         executeSearch(sku, { backgroundSync: true, silent: true });
       })
       .catch((error) => {
+        if (typeof SyncTracker !== "undefined") {
+          SyncTracker.markFailed(trackingId);
+        }
         console.error("Quick movement background error:", error);
 
         const isNetworkErr =

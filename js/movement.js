@@ -335,6 +335,10 @@ async function handleMovementSubmit(event) {
 
 function sendMovementBackground(payload, localMovementId) {
 
+  if (typeof SyncTracker !== 'undefined') {
+    SyncTracker.addInFlight(localMovementId, payload);
+  }
+
   Api.post('/warehouse/movement', payload)
     .then(result => {
 
@@ -345,6 +349,10 @@ function sendMovementBackground(payload, localMovementId) {
       // Berhasil tersinkron ke Google Sheets & Redis!
       const serverId = result.data?.movement_id || localMovementId;
       updateMovementSuccessStatus('synced', serverId);
+
+      if (typeof SyncTracker !== 'undefined') {
+        SyncTracker.markCompleted(localMovementId, payload, result.data);
+      }
 
       // Silent revalidation jika SKU ini sedang aktif dibuka di halaman cari
       if (
@@ -357,6 +365,10 @@ function sendMovementBackground(payload, localMovementId) {
 
     })
     .catch(error => {
+
+      if (typeof SyncTracker !== 'undefined') {
+        SyncTracker.markFailed(localMovementId);
+      }
 
       console.error('Movement background error:', error);
 
