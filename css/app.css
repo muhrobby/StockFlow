@@ -149,3 +149,26 @@ input {
   }
 
 }
+
+
+/* =========================================
+   MOBILE BOTTOM SHEET ANIMATION
+========================================= */
+@keyframes slideUpBottomSheet {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 639px) {
+  #quickMovementModal > div {
+    animation: slideUpBottomSheet 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+}
+
