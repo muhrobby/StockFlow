@@ -1019,7 +1019,11 @@ const SyncTracker = {
     const btnClearRecent = document.getElementById("btnClearRecentSync");
 
     if (btnOpen) {
-      btnOpen.addEventListener("click", () => this.openModal());
+      btnOpen.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.openModal();
+      });
     }
 
     if (banner) {
@@ -1030,11 +1034,17 @@ const SyncTracker = {
     }
 
     if (btnClose) {
-      btnClose.addEventListener("click", () => this.closeModal());
+      btnClose.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.closeModal();
+      });
     }
 
     if (btnCloseFooter) {
-      btnCloseFooter.addEventListener("click", () => this.closeModal());
+      btnCloseFooter.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.closeModal();
+      });
     }
 
     if (modal) {
@@ -1046,7 +1056,8 @@ const SyncTracker = {
     }
 
     if (btnSyncAll) {
-      btnSyncAll.addEventListener("click", () => {
+      btnSyncAll.addEventListener("click", (e) => {
+        e.preventDefault();
         if (typeof QueueManager !== "undefined") {
           QueueManager.processQueue();
         }
@@ -1054,7 +1065,8 @@ const SyncTracker = {
     }
 
     if (btnClearRecentSync) {
-      btnClearRecentSync.addEventListener("click", () => {
+      btnClearRecentSync.addEventListener("click", (e) => {
+        e.preventDefault();
         this.clearRecent();
       });
     }
@@ -1068,6 +1080,9 @@ const SyncTracker = {
     modal.classList.add("flex");
     document.body.style.overflow = "hidden";
     this.updateUI();
+    if (window.lucide) {
+      lucide.createIcons();
+    }
   },
 
   closeModal() {
@@ -1300,6 +1315,8 @@ const SyncTracker = {
     }
   }
 };
+
+window.SyncTracker = SyncTracker;
 
 /* =========================================
    MOVEMENT ERROR MODAL (Option 1)
