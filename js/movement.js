@@ -43,10 +43,15 @@ function bindMovementEvents() {
     toScanButton.addEventListener('click', () => handleLocationScan('movementToLocation', 'Lokasi tujuan'));
   }
 
+  const closeSuccessBtn = document.getElementById('btnCloseMovementSuccess');
+  if (closeSuccessBtn) {
+    closeSuccessBtn.addEventListener('click', hideMovementSuccess);
+  }
+
   /*
    * App.js sudah memiliki navigateTo().
    * Kita bungkus fungsi tersebut agar setiap kali
-   * halaman movement dibuka, NIK user ikut disinkronkan.
+   * halaman movement dibuka, Access ID user ikut disinkronkan.
    */
   const originalNavigateTo = window.navigateTo;
 
@@ -95,7 +100,7 @@ function syncMovementForm() {
   }
 
   if (nikInput && AppState.user) {
-    nikInput.value = AppState.user.nik || '';
+    nikInput.value = AppState.user.access_id || '';
   }
 
 }
@@ -212,10 +217,11 @@ async function handleMovementSubmit(event) {
     document.getElementById('movementToLocation')?.value
   ).toUpperCase();
 
-  const nik = normalizeValue(
-    AppState.user?.nik ||
+  const access_id = normalizeValue(
+    AppState.user?.access_id ||
     document.getElementById('movementNik')?.value
   );
+  const store_id = AppState.user?.default_store_id || '';
 
   const errors = [];
 
@@ -231,8 +237,11 @@ async function handleMovementSubmit(event) {
     errors.push('Qty harus lebih besar dari 0.');
   }
 
-  if (!nik) {
-    errors.push('NIK user tidak ditemukan. Silakan login ulang.');
+  if (!access_id) {
+    errors.push('Access ID user tidak ditemukan. Silakan login ulang.');
+  }
+  if (!store_id) {
+    errors.push('Store ID tidak ditemukan. Silakan login ulang.');
   }
 
   if (type === 'IN' && !toLocation) {
@@ -268,7 +277,8 @@ async function handleMovementSubmit(event) {
     qty,
     from_location: fromLocation,
     to_location: toLocation,
-    nik
+    access_id,
+    store_id
   };
 
   // 1. Generate local movement ID for optimistic tracking
@@ -288,12 +298,7 @@ async function handleMovementSubmit(event) {
 
   // 2. OPTIMISTIC FEEDBACK (0 ms)
   if (navigator.vibrate) {
-    navigator.vibrate([60, 40, 60]);
-  }
-
-  // Mainkan Beep Sukses instan
-  if (window.AudioFeedback) {
-    window.AudioFeedback.playSuccess();
+    navigator.vibrate([40]);
   }
 
   const typeLabels = {
@@ -302,9 +307,9 @@ async function handleMovementSubmit(event) {
     MOVE: 'Pindah barang'
   };
   const label = typeLabels[type] || 'Movement';
-  showToast(`${label} dicatat! Menyinkronkan...`);
+  showToast(`${label} dicatat lokal! Menyinkronkan...`);
 
-  // Render kartu sukses optimistik seketika
+  // Render kartu status optimistik seketika (Menyinkronkan)
   renderMovementSuccess({
     type,
     sku,
@@ -354,6 +359,16 @@ function sendMovementBackground(payload, localMovementId) {
       // Berhasil tersinkron ke Google Sheets & Redis!
       const serverId = result.data?.movement_id || localMovementId;
       updateMovementSuccessStatus('synced', serverId);
+
+      // Mainkan feedback sukses final saat benar-benar tersinkron di cloud
+      if (window.AudioFeedback) {
+        window.AudioFeedback.playSuccess();
+      }
+      if (navigator.vibrate) {
+        navigator.vibrate([60, 40, 60]);
+      }
+
+      showToast(`Sukses: Movement ${serverId} tersinkron ke cloud!`);
 
       if (typeof SyncTracker !== 'undefined') {
         SyncTracker.markCompleted(localMovementId, payload, result.data);
@@ -543,36 +558,101 @@ function flashSubmitSuccess() {
 }
 
 
+let movementSuccessTimer = null;
+
 function updateMovementSuccessStatus(status, movementId) {
 
+  const successBox = document.getElementById('movementSuccess');
+  const icon = document.getElementById('movementSuccessIcon');
+  const title = document.getElementById('movementSuccessTitle');
   const badge = document.getElementById('movementSuccessBadge');
-  const badgeText = document.getElementById('movementSuccessBadgeText');
   const message = document.getElementById('movementSuccessMessage');
 
-  if (!badge) return;
+  if (!successBox) return;
 
-  if (status === 'synced') {
-    badge.className = 'inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800';
-    badge.innerHTML = `
-      <i data-lucide="check" class="h-3 w-3"></i>
-      <span>Tersinkron</span>
-    `;
-    if (movementId && message) {
-      const parts = message.textContent.split(' · ID ');
-      message.textContent = `${parts[0]} · ID ${movementId}`;
+  // Batalkan timer auto-dismiss sebelumnya jika ada
+  if (movementSuccessTimer) {
+    clearTimeout(movementSuccessTimer);
+    movementSuccessTimer = null;
+  }
+
+  if (status === 'syncing') {
+    // Style Status Syncing (Biru / Pending)
+    successBox.className = 'relative mt-4 rounded-2xl border border-blue-200 bg-blue-50/80 p-4 transition-all duration-200';
+    if (icon) {
+      icon.className = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600';
+      icon.innerHTML = '<div class="h-4 w-4 animate-spin rounded-full border-2 border-blue-400 border-t-blue-700"></div>';
     }
+    if (title) {
+      title.className = 'text-sm font-black text-blue-950';
+      title.textContent = 'Menyinkronkan Movement...';
+    }
+    if (badge) {
+      badge.className = 'inline-flex shrink-0 items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800';
+      badge.innerHTML = `
+        <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-600"></span>
+        <span id="movementSuccessBadgeText">Menyinkronkan...</span>
+      `;
+    }
+    if (message) {
+      message.className = 'mt-1 text-sm text-blue-700 font-medium';
+    }
+  } else if (status === 'synced') {
+    // Style Status Synced (Hijau Emerald Sukses)
+    successBox.className = 'relative mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 transition-all duration-200';
+    if (icon) {
+      icon.className = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600';
+      icon.innerHTML = '<i data-lucide="circle-check" class="h-5 w-5"></i>';
+    }
+    if (title) {
+      title.className = 'text-sm font-black text-emerald-950';
+      title.textContent = 'Movement Berhasil Tersinkron';
+    }
+    if (badge) {
+      badge.className = 'inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800';
+      badge.innerHTML = `
+        <i data-lucide="check" class="h-3 w-3"></i>
+        <span>Tersinkron</span>
+      `;
+    }
+    if (message) {
+      message.className = 'mt-1 text-sm text-emerald-700 font-medium';
+      if (movementId) {
+        const parts = message.textContent.split(' · ID ');
+        message.textContent = `${parts[0]} · ID ${movementId}`;
+      }
+    }
+
+    // Auto-dismiss setelah 5 detik agar antarmuka kembali bersih
+    movementSuccessTimer = setTimeout(() => {
+      hideMovementSuccess();
+    }, 5000);
   } else if (status === 'offline') {
-    badge.className = 'inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800';
-    badge.innerHTML = `
-      <i data-lucide="cloud-off" class="h-3 w-3"></i>
-      <span>Tersimpan di HP</span>
-    `;
-  } else if (status === 'syncing') {
-    badge.className = 'inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800';
-    badge.innerHTML = `
-      <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-600"></span>
-      <span>Menyinkronkan...</span>
-    `;
+    // Style Status Offline (Amber / Tersimpan di HP)
+    successBox.className = 'relative mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 transition-all duration-200';
+    if (icon) {
+      icon.className = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700';
+      icon.innerHTML = '<i data-lucide="cloud-off" class="h-5 w-5"></i>';
+    }
+    if (title) {
+      title.className = 'text-sm font-black text-amber-950';
+      title.textContent = 'Tersimpan Offline di HP';
+    }
+    if (badge) {
+      badge.className = 'inline-flex shrink-0 items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800';
+      badge.innerHTML = `
+        <i data-lucide="cloud-off" class="h-3 w-3"></i>
+        <span>Tersimpan di HP</span>
+      `;
+    }
+    if (message) {
+      message.className = 'mt-1 text-sm text-amber-700 font-medium';
+    }
+
+    // Auto-dismiss setelah 6 detik untuk offline
+    movementSuccessTimer = setTimeout(() => {
+      hideMovementSuccess();
+    }, 6000);
   }
 
   if (window.lucide) lucide.createIcons();
@@ -586,7 +666,7 @@ function renderMovementSuccess(data) {
     IN: 'Barang masuk',
     OUT: 'Barang keluar',
     MOVE: 'Barang dipindahkan'
-  }[data.type] || 'Movement berhasil';
+  }[data.type] || 'Movement';
 
   const message = document.getElementById('movementSuccessMessage');
   const successBox = document.getElementById('movementSuccess');
@@ -675,6 +755,11 @@ function hideMovementError() {
 
 
 function hideMovementSuccess() {
+
+  if (movementSuccessTimer) {
+    clearTimeout(movementSuccessTimer);
+    movementSuccessTimer = null;
+  }
 
   document.getElementById('movementSuccess')?.classList.add('hidden');
 

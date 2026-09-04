@@ -5,3 +5,4 @@ yarn-error.log*
 .DS_Store
 docs/
 n8n/
+dummy_data/

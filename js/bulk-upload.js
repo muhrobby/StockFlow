@@ -9,6 +9,8 @@
   const elements = {
     modalUpload: document.getElementById('bulkUploadModal'),
     modalResult: document.getElementById('bulkResultModal'),
+    modalSubtitle: document.getElementById('bulkModalSubtitle'),
+    templateExample: document.getElementById('bulkTemplateExample'),
     btnOpenFromDashboard: document.getElementById('btnOpenBulkFromDashboard'),
     btnOpenFromMovement: document.getElementById('btnOpenBulkFromMovement'),
     btnCloseModal: document.getElementById('bulkModalCloseBtn'),
@@ -39,10 +41,21 @@
   // 1. Template CSV Generator & Downloader
   // ==========================================
   function downloadTemplate() {
-    const templateContent = 'sku,location,qty\n100001,A-01-P10,10\n100002,A-01-P11,20\n100003,B-01-P10,5\n';
+    const user = (window.AppState && window.AppState.user) || window.Auth?.getSession()?.user;
+    const storeId = user?.default_store_id || 'STR-300';
+
+    // Sesuaikan data contoh lokasi dengan store aktif pengguna (mencegah penolakan cross-store)
+    let sampleRows = '228436,A-01-P10,10\n228438,A-01-P20,20\n';
+    if (storeId === 'STR-301') {
+      sampleRows = '228436,B-01-P10,10\n228438,C-01-P10,20\n';
+    }
+
+    const templateContent = `sku,location,qty\n${sampleRows}`;
+    const filename = storeId ? `stock_template_${storeId}.csv` : 'stock_template.csv';
+
     triggerDownload(
       new Blob([templateContent], { type: 'text/csv;charset=utf-8;' }),
-      'stock_template.csv'
+      filename
     );
   }
 
@@ -123,6 +136,20 @@
   // ==========================================
   function openModal() {
     resetForm();
+    const user = (window.AppState && window.AppState.user) || window.Auth?.getSession()?.user;
+    const storeId = user?.default_store_id || '';
+
+    if (elements.modalSubtitle) {
+      elements.modalSubtitle.textContent = storeId
+        ? `Impor data stok via file CSV (Store: ${storeId})`
+        : 'Impor data stok via file CSV';
+    }
+
+    if (elements.templateExample) {
+      const sampleLoc = storeId === 'STR-301' ? 'B-01-P10' : 'A-01-P10';
+      elements.templateExample.textContent = `228436,${sampleLoc},10`;
+    }
+
     if (elements.modalUpload) {
       elements.modalUpload.classList.remove('hidden');
       elements.modalUpload.classList.add('flex');
@@ -244,8 +271,12 @@
     if (!selectedFile || parsedRows.length === 0 || isSubmitting) return;
 
     const user = (window.AppState && window.AppState.user) || window.Auth?.getSession()?.user;
-    if (!user || !user.nik) {
+    if (!user || !user.access_id) {
       showError('Sesi login telah berakhir. Silakan login kembali.');
+      return;
+    }
+    if (!user.default_store_id) {
+      showError('Data store tidak ditemukan di sesi. Silakan login kembali.');
       return;
     }
 
@@ -258,7 +289,8 @@
 
     const payload = {
       mode,
-      nik: user.nik,
+      access_id: user.access_id,
+      store_id: user.default_store_id,
       items: parsedRows
     };
 

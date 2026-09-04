@@ -172,3 +172,12 @@ input {
   }
 }
 
+/* =========================================
+   PAGE CONTAINER VISIBILITY SAFETY
+========================================= */
+#appPage.hidden,
+#loginPage.hidden,
+#bootPage.hidden {
+  display: none !important;
+}
+

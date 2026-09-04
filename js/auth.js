@@ -4,13 +4,13 @@
    * Login melalui n8n.
    */
   async function login(
-    nik
+    access_id
   ) {
 
     return Api.post(
       '/warehouse/login',
       {
-        nik
+        access_id
       }
     );
 

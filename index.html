@@ -45,7 +45,7 @@
           </div>
           <h1 class="text-2xl font-black">StockFlow</h1>
           <p class="mt-2 text-sm text-slate-500">
-            Masukkan NIK untuk melanjutkan
+            Masukkan Access ID untuk melanjutkan
           </p>
         </div>
         <form
@@ -53,7 +53,7 @@
           class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
         >
           <label for="nikInput" class="mb-2 block text-sm font-semibold"
-            >NIK</label
+            >Access ID</label
           >
           <div class="relative">
             <i
@@ -65,7 +65,7 @@
               type="text"
               inputmode="numeric"
               autocomplete="off"
-              placeholder="Masukkan NIK"
+              placeholder="Masukkan Access ID"
               class="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-lg font-bold outline-none transition focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-100"
             />
           </div>
@@ -84,7 +84,7 @@
       </div>
     </section>
 
-    <div id="appPage" class="hidden min-h-screen lg:flex">
+    <div id="appPage" class="hidden min-h-screen">
       <aside
         class="hidden w-64 shrink-0 border-r border-slate-200 bg-white lg:flex lg:flex-col"
       >
@@ -313,7 +313,11 @@
                   <span
                     id="dashboardNik"
                     class="rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold"
-                    >NIK -</span
+                    >ID -</span
+                  ><span
+                    id="dashboardStore"
+                    class="rounded-full bg-slate-700 px-3 py-1.5 text-xs font-bold"
+                    >-</span
                   ><span
                     id="dashboardRole"
                     class="rounded-full bg-red-600 px-3 py-1.5 text-xs font-bold"
@@ -521,11 +525,22 @@
               </div>
             </div>
             <div class="mt-5">
-              <div class="mb-3">
-                <h3 class="font-black">Lokasi Stock</h3>
-                <p id="locationCount" class="mt-0.5 text-xs text-slate-400">
-                  -
-                </p>
+              <div class="mb-3 flex items-center justify-between">
+                <div>
+                  <h3 class="font-black">Lokasi Stock</h3>
+                  <p id="locationCount" class="mt-0.5 text-xs text-slate-400">
+                    -
+                  </p>
+                </div>
+                <button
+                  id="btnRefreshSearch"
+                  type="button"
+                  class="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 active:scale-95"
+                  title="Perbarui stok dari cloud"
+                >
+                  <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
+                  <span>Refresh</span>
+                </button>
               </div>
               <div id="locationList" class="space-y-3"></div>
             </div>
@@ -678,7 +693,7 @@
               </div>
               <div>
                 <label for="movementNik" class="mb-2 block text-sm font-bold"
-                  >NIK</label
+                  >ID Operator</label
                 ><input
                   id="movementNik"
                   type="text"
@@ -723,19 +738,19 @@
           </div>
           <div
             id="movementSuccess"
-            class="mt-4 hidden rounded-2xl border border-emerald-200 bg-emerald-50 p-4 transition-all duration-200"
+            class="relative mt-4 hidden rounded-2xl border border-blue-200 bg-blue-50/80 p-4 transition-all duration-200"
           >
             <div class="flex items-start gap-3">
               <div
                 id="movementSuccessIcon"
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600"
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600"
               >
-                <i data-lucide="circle-check" class="h-5 w-5"></i>
+                <div class="h-4 w-4 animate-spin rounded-full border-2 border-blue-400 border-t-blue-700"></div>
               </div>
-              <div class="min-w-0 flex-1">
+              <div class="min-w-0 flex-1 pr-6">
                 <div class="flex flex-wrap items-center justify-between gap-2">
-                  <h3 id="movementSuccessTitle" class="text-sm font-black text-emerald-900">
-                    Movement berhasil dicatat
+                  <h3 id="movementSuccessTitle" class="text-sm font-black text-blue-950">
+                    Menyinkronkan Movement...
                   </h3>
                   <span
                     id="movementSuccessBadge"
@@ -747,11 +762,21 @@
                 </div>
                 <p
                   id="movementSuccessMessage"
-                  class="mt-1 text-sm text-emerald-700"
+                  class="mt-1 text-sm text-blue-700 font-medium"
                 >
                   -
                 </p>
               </div>
+              <!-- Tombol Tutup Manual -->
+              <button
+                id="btnCloseMovementSuccess"
+                type="button"
+                class="absolute top-3 right-3 flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-200/60 hover:text-slate-700 active:scale-95"
+                aria-label="Tutup notifikasi"
+                title="Tutup"
+              >
+                <i data-lucide="x" class="h-4 w-4"></i>
+              </button>
             </div>
           </div>
         </section>
@@ -856,7 +881,7 @@
             </div>
             <div class="min-w-0">
               <h3 class="font-black text-slate-900 truncate">Bulk Upload Stock</h3>
-              <p class="text-xs text-slate-400 truncate">Impor data stok via file CSV</p>
+              <p id="bulkModalSubtitle" class="text-xs text-slate-400 truncate">Impor data stok via file CSV</p>
             </div>
           </div>
           <button
@@ -924,7 +949,7 @@
                   sku,location,qty
                 </p>
                 <p class="mt-1 text-[11px] text-slate-500">
-                  Contoh: <code class="font-mono">100001,A-01-P10,10</code>
+                  Contoh: <code id="bulkTemplateExample" class="font-mono">228436,A-01-P10,10</code>
                 </p>
               </div>
               <button

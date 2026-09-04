@@ -13,6 +13,18 @@ const AppState = {
 // In-Memory Search Cache untuk pencarian kilat (0 ms)
 const SearchCache = new Map();
 
+function getSearchCacheKey(sku) {
+  const userRole = String(AppState.user?.role || "").toUpperCase();
+  const allowedStores = String(AppState.user?.allowed_stores || "").trim();
+  const isMultiStore =
+    ["SUPER_ADMIN", "SUPER ADMIN", "OPS"].includes(userRole) &&
+    allowedStores === "*";
+  const storeKey = isMultiStore
+    ? "ALL"
+    : AppState.user?.default_store_id || "";
+  return `${storeKey}:${sku}`;
+}
+
 /* =========================================
    INIT
 ========================================= */
@@ -92,6 +104,17 @@ function bindEvents() {
       closeErrorModal();
     });
 
+  // Tombol Refresh Hasil Pencarian
+  document
+    .getElementById("btnRefreshSearch")
+    ?.addEventListener("click", () => {
+      const sku = AppState.lastSearch?.sku;
+      if (sku) {
+        showToast(`Memperbarui stok SKU ${sku} dari cloud...`);
+        executeSearch(sku, { skipCache: true });
+      }
+    });
+
   window.addEventListener("online", () => {
     showToast("Koneksi online kembali. Menyinkronkan...");
     QueueManager.processQueue();
@@ -131,12 +154,12 @@ async function handleLogin(event) {
 
   const nikInput = document.getElementById("nikInput");
 
-  const nik = normalizeValue(nikInput.value);
+  const access_id = normalizeValue(nikInput.value);
 
   hideLoginError();
 
-  if (!nik) {
-    showLoginError("Masukkan NIK terlebih dahulu.");
+  if (!access_id) {
+    showLoginError("Masukkan Access ID terlebih dahulu.");
 
     nikInput.focus();
 
@@ -146,7 +169,7 @@ async function handleLogin(event) {
   setLoginLoading(true);
 
   try {
-    const result = await Auth.login(nik);
+    const result = await Auth.login(access_id);
 
     if (!result || result.success !== true) {
       throw new Error(result?.message || "Login gagal.");
@@ -164,7 +187,7 @@ async function handleLogin(event) {
 
     navigateTo("dashboard");
 
-    showToast(`Selamat datang, ${result.user.nama || result.user.nik}`);
+    showToast(`Selamat datang, ${result.user.nama || result.user.access_id}`);
   } catch (error) {
     console.error("Login error:", error);
 
@@ -247,21 +270,28 @@ async function executeSearch(sku, options = {}) {
 
   hideSearchError();
 
-  // 1. Cek In-Memory Cache untuk respon instan (0 ms)
-  if (options.skipCache !== true && SearchCache.has(sku)) {
-    const cached = SearchCache.get(sku);
-    if (Date.now() - cached.timestamp < 300000) { // 5 menit
+  const userRole = String(AppState.user?.role || "").toUpperCase();
+  const allowedStores = String(AppState.user?.allowed_stores || "").trim();
+  const isMultiStore =
+    ["SUPER_ADMIN", "SUPER ADMIN", "OPS"].includes(userRole) &&
+    allowedStores === "*";
+  const store_id = isMultiStore ? "*" : (AppState.user?.default_store_id || "");
+  const cacheKey = getSearchCacheKey(sku);
+
+  // 1. Cek In-Memory Cache untuk respon instan (0 ms) - Stale-While-Revalidate
+  let servedFromCache = false;
+  if (options.skipCache !== true && SearchCache.has(cacheKey)) {
+    const cached = SearchCache.get(cacheKey);
+    // Cache valid untuk render kilat 0 ms selama 60 detik
+    if (Date.now() - cached.timestamp < 60000) {
       AppState.lastSearch = cached.item;
       renderSearchResult(cached.item);
-
-      // Jika tidak diminta background sync, langsung selesai (0 ms)
-      if (!options.backgroundSync) {
-        return;
-      }
+      servedFromCache = true;
     }
   }
 
-  if (!options.silent) {
+  // Jika belum ada data di cache atau skipCache diminta, tampilkan skeleton loading
+  if (!servedFromCache && !options.silent) {
     clearSearchResult();
     setSearchLoading(true);
   }
@@ -269,6 +299,10 @@ async function executeSearch(sku, options = {}) {
   try {
     const result = await Api.post("/warehouse/search", {
       sku,
+      store_id,
+      role: AppState.user?.role || "USER",
+      allowed_stores: AppState.user?.allowed_stores || "",
+      access_id: AppState.user?.access_id || "",
     });
 
     if (!result || result.success !== true) {
@@ -280,18 +314,20 @@ async function executeSearch(sku, options = {}) {
     }
 
     AppState.lastSearch = result.item;
-    SearchCache.set(sku, { item: result.item, timestamp: Date.now() });
+    SearchCache.set(cacheKey, { item: result.item, timestamp: Date.now() });
 
+    // Render data terbaru dari cloud (sinkron otomatis jika ada perubahan stok)
     renderSearchResult(result.item);
   } catch (error) {
     console.error("Search error:", error);
 
-    if (!options.silent) {
+    // Hanya tampilkan error jika belum ada data yang berhasil dirender dari cache
+    if (!servedFromCache && !options.silent) {
       clearSearchResult();
       showSearchError(error.message || "Terjadi kesalahan saat mencari barang.");
     }
   } finally {
-    if (!options.silent) {
+    if (!servedFromCache && !options.silent) {
       setSearchLoading(false);
     }
   }
@@ -321,8 +357,15 @@ function renderSearchResult(item) {
   document.getElementById("resultTotalStock").textContent =
     formatNumber(totalStock);
 
-  document.getElementById("locationCount").textContent =
-    `${locations.length} lokasi stock`;
+  const userRole = String(AppState.user?.role || "").toUpperCase();
+  const allowedStores = String(AppState.user?.allowed_stores || "").trim();
+  const isMultiStore =
+    ["SUPER_ADMIN", "SUPER ADMIN", "OPS"].includes(userRole) &&
+    allowedStores === "*";
+
+  document.getElementById("locationCount").textContent = isMultiStore
+    ? `${locations.length} lokasi stock · Semua Toko`
+    : `${locations.length} lokasi stock`;
 
   renderLocations(locations);
 
@@ -377,6 +420,7 @@ function renderLocations(locations) {
     `;
 
     const locationCode = escapeHtml(location.location_code || "-");
+    const storeId = escapeHtml(location.store_id || AppState.user?.default_store_id || "");
     const zone = escapeHtml(location.zone || "-");
     const section = escapeHtml(location.section || "-");
     const position = escapeHtml(location.position || "-");
@@ -391,7 +435,12 @@ function renderLocations(locations) {
           </div>
           <div class="min-w-0">
             <h3 class="truncate text-base sm:text-lg font-black text-slate-900">${locationCode}</h3>
-            <div class="mt-2 flex flex-wrap gap-1.5">
+            <div class="mt-2 flex flex-wrap items-center gap-1.5">
+              ${storeId ? `
+              <span class="inline-flex items-center gap-1 rounded-lg bg-indigo-50 border border-indigo-200 px-2 py-1 text-[11px] font-bold text-indigo-700">
+                <i data-lucide="store" class="h-3 w-3 shrink-0"></i>
+                <span>${storeId}</span>
+              </span>` : ''}
               <span class="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-600">
                 Zone ${zone}
               </span>
@@ -418,6 +467,7 @@ function renderLocations(locations) {
             class="btn-quick-out flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-2 text-xs font-black text-red-700 transition hover:bg-red-100 active:scale-95"
             data-location="${locationCode}"
             data-qty="${rawQty}"
+            data-store="${storeId}"
           >
             <i data-lucide="arrow-up-right" class="h-4 w-4 shrink-0"></i>
             <span class="truncate">Ambil</span>
@@ -427,6 +477,7 @@ function renderLocations(locations) {
             class="btn-quick-move flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-2 text-xs font-black text-blue-700 transition hover:bg-blue-100 active:scale-95"
             data-location="${locationCode}"
             data-qty="${rawQty}"
+            data-store="${storeId}"
           >
             <i data-lucide="arrow-left-right" class="h-4 w-4 shrink-0"></i>
             <span class="truncate">Pindah</span>
@@ -437,12 +488,12 @@ function renderLocations(locations) {
 
     // Event listener tombol Ambil
     card.querySelector(".btn-quick-out").addEventListener("click", () => {
-      openQuickMovementModal("OUT", locationCode, rawQty);
+      openQuickMovementModal("OUT", locationCode, rawQty, location.store_id || storeId);
     });
 
     // Event listener tombol Pindah
     card.querySelector(".btn-quick-move").addEventListener("click", () => {
-      openQuickMovementModal("MOVE", locationCode, rawQty);
+      openQuickMovementModal("MOVE", locationCode, rawQty, location.store_id || storeId);
     });
 
     container.appendChild(card);
@@ -648,7 +699,7 @@ function setLoginLoading(loading) {
       ></div>
 
       <span>
-        Memeriksa NIK...
+        Memeriksa Access ID...
       </span>
 
     `;
@@ -675,13 +726,20 @@ function setLoginLoading(loading) {
 ========================================= */
 
 function showLogin() {
-  document.getElementById("appPage").classList.add("hidden");
+  const appPage = document.getElementById("appPage");
+  appPage.classList.add("hidden");
+  appPage.classList.remove("lg:flex");
 
   const loginPage = document.getElementById("loginPage");
-
   loginPage.classList.remove("hidden");
-
   loginPage.classList.add("flex");
+
+  if (typeof SyncTracker !== "undefined") {
+    SyncTracker.reset();
+  }
+  if (typeof QueueManager !== "undefined") {
+    QueueManager.updateBanner();
+  }
 
   document.getElementById("bootPage").classList.add("hidden");
 
@@ -694,14 +752,22 @@ function showLogin() {
 
 function showApp() {
   const loginPage = document.getElementById("loginPage");
-
   loginPage.classList.add("hidden");
-
   loginPage.classList.remove("flex");
 
-  document.getElementById("appPage").classList.remove("hidden");
+  const appPage = document.getElementById("appPage");
+  appPage.classList.remove("hidden");
+  appPage.classList.add("lg:flex");
 
   renderUser();
+
+  // Inisialisasi/update indikator lonceng notifikasi & antrean sesuai user aktif
+  if (typeof SyncTracker !== "undefined") {
+    SyncTracker.updateUI();
+  }
+  if (typeof QueueManager !== "undefined") {
+    QueueManager.updateBanner();
+  }
 
   document.getElementById("bootPage").classList.add("hidden");
 
@@ -719,21 +785,27 @@ function renderUser() {
     return;
   }
 
-  const displayName = user.nama || user.nik || "PIC";
+  const displayName = user.nama || user.access_id || "Operator";
 
   document.getElementById("headerUserName").textContent = displayName;
 
-  document.getElementById("headerUserNik").textContent =
-    `NIK ${user.nik || "-"}`;
+  // Tampilkan access_id di header
+  document.getElementById("headerUserNik").textContent = `ID ${user.access_id || "-"}`;
 
   document.getElementById("dashboardUserName").textContent = displayName;
 
-  document.getElementById("dashboardNik").textContent =
-    `NIK ${user.nik || "-"}`;
+  // Tampilkan access_id di dashboard
+  document.getElementById("dashboardNik").textContent = `ID ${user.access_id || "-"}`;
 
   document.getElementById("dashboardRole").textContent = String(
-    user.role || "PIC",
+    user.role || "USER",
   ).toUpperCase();
+
+  // Tampilkan nama store (T5 sudah menambahkan elemen dashboardStore)
+  const dashboardStore = document.getElementById("dashboardStore");
+  if (dashboardStore) {
+    dashboardStore.textContent = user.default_store_id || "-";
+  }
 }
 
 /* =========================================
@@ -752,6 +824,14 @@ async function logout() {
   AppState.lastSearch = null;
 
   SearchCache.clear();
+
+  // Bersihkan data notifikasi lonceng & antrean UI agar tidak bocor ke user berikutnya
+  if (typeof SyncTracker !== "undefined") {
+    SyncTracker.reset();
+  }
+  if (typeof QueueManager !== "undefined") {
+    QueueManager.updateBanner();
+  }
 
   document.getElementById("nikInput").value = "";
 
@@ -870,8 +950,13 @@ function showToast(message) {
 ========================================= */
 
 const QueueManager = {
-  STORAGE_KEY: "stockflow_pending_movements",
+  STORAGE_KEY_PREFIX: "stockflow_pending_movements",
   isProcessing: false,
+
+  getStorageKey() {
+    const accessId = AppState.user?.access_id;
+    return accessId ? `${this.STORAGE_KEY_PREFIX}_${accessId}` : this.STORAGE_KEY_PREFIX;
+  },
 
   init() {
     this.updateBanner();
@@ -882,14 +967,39 @@ const QueueManager = {
 
   getQueue() {
     try {
-      return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || "[]");
+      const key = this.getStorageKey();
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        return JSON.parse(raw);
+      }
+      // Migrasi aman dari legacy key jika ada
+      if (AppState.user?.access_id) {
+        const legacyRaw = localStorage.getItem(this.STORAGE_KEY_PREFIX);
+        if (legacyRaw) {
+          const legacyQueue = JSON.parse(legacyRaw);
+          if (Array.isArray(legacyQueue) && legacyQueue.length > 0) {
+            const userItems = legacyQueue.filter(
+              (item) => String(item.payload?.access_id || item.payload?.nik || "") === String(AppState.user.access_id)
+            );
+            if (userItems.length > 0) {
+              localStorage.setItem(key, JSON.stringify(userItems));
+              const remaining = legacyQueue.filter(
+                (item) => String(item.payload?.access_id || item.payload?.nik || "") !== String(AppState.user.access_id)
+              );
+              localStorage.setItem(this.STORAGE_KEY_PREFIX, JSON.stringify(remaining));
+              return userItems;
+            }
+          }
+        }
+      }
+      return [];
     } catch {
       return [];
     }
   },
 
   saveQueue(queue) {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(queue));
+    localStorage.setItem(this.getStorageKey(), JSON.stringify(queue));
     this.updateBanner();
     if (typeof SyncTracker !== "undefined") {
       SyncTracker.updateUI();
@@ -926,11 +1036,17 @@ const QueueManager = {
   },
 
   updateBanner() {
-    const queue = this.getQueue();
     const banner = document.getElementById("offlineQueueBanner");
     const countEl = document.getElementById("offlineQueueCount");
     if (!banner) return;
 
+    // Jika tidak ada user aktif, sembunyikan banner antrean offline
+    if (!AppState.user) {
+      banner.classList.add("hidden");
+      return;
+    }
+
+    const queue = this.getQueue();
     if (queue.length > 0) {
       if (countEl) countEl.textContent = queue.length;
       banner.classList.remove("hidden");
@@ -945,7 +1061,7 @@ const QueueManager = {
   },
 
   async processQueue() {
-    if (this.isProcessing) return;
+    if (this.isProcessing || !AppState.user) return;
 
     const queue = this.getQueue();
     if (queue.length === 0) return;
@@ -1018,9 +1134,14 @@ const QueueManager = {
 ========================================= */
 
 const SyncTracker = {
-  STORAGE_RECENT_KEY: "stockflow_recent_synced",
+  STORAGE_RECENT_PREFIX: "stockflow_recent_synced",
   inFlightMap: new Map(),
   isModalOpen: false,
+
+  getStorageKey() {
+    const accessId = AppState.user?.access_id;
+    return accessId ? `${this.STORAGE_RECENT_PREFIX}_${accessId}` : this.STORAGE_RECENT_PREFIX;
+  },
 
   init() {
     this.bindEvents();
@@ -1082,8 +1203,8 @@ const SyncTracker = {
       });
     }
 
-    if (btnClearRecentSync) {
-      btnClearRecentSync.addEventListener("click", (e) => {
+    if (btnClearRecent) {
+      btnClearRecent.addEventListener("click", (e) => {
         e.preventDefault();
         this.clearRecent();
       });
@@ -1128,14 +1249,35 @@ const SyncTracker = {
 
   getRecent() {
     try {
-      return JSON.parse(localStorage.getItem(this.STORAGE_RECENT_KEY) || "[]");
+      const key = this.getStorageKey();
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        return JSON.parse(raw);
+      }
+      // Migrasi aman dari legacy key jika ada
+      if (AppState.user?.access_id) {
+        const legacyRaw = localStorage.getItem(this.STORAGE_RECENT_PREFIX);
+        if (legacyRaw) {
+          const legacyItems = JSON.parse(legacyRaw);
+          if (Array.isArray(legacyItems) && legacyItems.length > 0) {
+            const userItems = legacyItems.filter(
+              (item) => String(item.access_id || item.payload?.access_id || item.payload?.nik || "") === String(AppState.user.access_id)
+            );
+            if (userItems.length > 0) {
+              localStorage.setItem(key, JSON.stringify(userItems));
+              return userItems;
+            }
+          }
+        }
+      }
+      return [];
     } catch {
       return [];
     }
   },
 
   saveRecent(list) {
-    localStorage.setItem(this.STORAGE_RECENT_KEY, JSON.stringify(list.slice(0, 15)));
+    localStorage.setItem(this.getStorageKey(), JSON.stringify(list.slice(0, 15)));
   },
 
   addInFlight(id, payload) {
@@ -1143,7 +1285,8 @@ const SyncTracker = {
       id,
       payload,
       timestamp: Date.now(),
-      status: "syncing"
+      status: "syncing",
+      access_id: AppState.user?.access_id || payload?.access_id || ""
     });
     this.updateUI();
   },
@@ -1157,7 +1300,8 @@ const SyncTracker = {
       id: serverData?.movement_id || id,
       payload,
       timestamp: Date.now(),
-      completedAt: timeStr
+      completedAt: timeStr,
+      access_id: AppState.user?.access_id || payload?.access_id || ""
     });
     this.saveRecent(recent);
     this.updateUI();
@@ -1169,8 +1313,39 @@ const SyncTracker = {
   },
 
   clearRecent() {
-    localStorage.removeItem(this.STORAGE_RECENT_KEY);
+    localStorage.removeItem(this.getStorageKey());
     this.updateUI();
+  },
+
+  reset() {
+    this.inFlightMap.clear();
+    this.closeModal();
+
+    const badge = document.getElementById("syncTrayBadge");
+    if (badge) {
+      badge.textContent = "0";
+      badge.classList.add("hidden");
+      badge.classList.remove("flex");
+    }
+
+    const countBadge = document.getElementById("syncPendingCountBadge");
+    if (countBadge) countBadge.textContent = "0";
+
+    const btnSyncAll = document.getElementById("btnSyncAllPending");
+    if (btnSyncAll) btnSyncAll.classList.add("hidden");
+
+    const pendingSection = document.getElementById("syncPendingSection");
+    const pendingListEl = document.getElementById("syncPendingList");
+    if (pendingSection) pendingSection.classList.add("hidden");
+    if (pendingListEl) pendingListEl.innerHTML = "";
+
+    const recentSection = document.getElementById("syncRecentSection");
+    const recentListEl = document.getElementById("syncRecentList");
+    if (recentSection) recentSection.classList.add("hidden");
+    if (recentListEl) recentListEl.innerHTML = "";
+
+    const emptyState = document.getElementById("syncEmptyState");
+    if (emptyState) emptyState.classList.remove("hidden");
   },
 
   handleNetworkChange(isOnline) {
@@ -1187,7 +1362,15 @@ const SyncTracker = {
   },
 
   updateUI() {
-    const inFlightList = Array.from(this.inFlightMap.values());
+    if (!AppState.user) {
+      this.reset();
+      return;
+    }
+
+    const activeAccessId = String(AppState.user.access_id || "");
+    const inFlightList = Array.from(this.inFlightMap.values()).filter(
+      (item) => !item.access_id || String(item.access_id) === activeAccessId
+    );
     const queueList = typeof QueueManager !== "undefined" ? QueueManager.getQueue() : [];
     const totalPending = inFlightList.length + queueList.length;
     const isOnline = navigator.onLine;
@@ -1293,7 +1476,10 @@ const SyncTracker = {
     }
 
     // 4. Render Recent Items
-    const recentList = this.getRecent();
+    const rawRecent = this.getRecent();
+    const recentList = rawRecent.filter(
+      (item) => !item.access_id || String(item.access_id) === activeAccessId
+    );
     const recentSection = document.getElementById("syncRecentSection");
     const recentListEl = document.getElementById("syncRecentList");
     if (recentSection && recentListEl) {
@@ -1422,6 +1608,7 @@ function closeErrorModal() {
 const QuickMovementState = {
   mode: "OUT", // "OUT" | "MOVE"
   locationCode: "",
+  storeId: "",
   maxQty: 0,
   loading: false,
 };
@@ -1431,8 +1618,9 @@ const QuickMovementState = {
  * @param {'OUT' | 'MOVE'} mode
  * @param {string} locationCode
  * @param {number} availableQty
+ * @param {string} storeId
  */
-function openQuickMovementModal(mode, locationCode, availableQty) {
+function openQuickMovementModal(mode, locationCode, availableQty, storeId = "") {
   if (!AppState.lastSearch || !AppState.lastSearch.sku) {
     showToast("Data barang tidak valid.");
     return;
@@ -1440,6 +1628,7 @@ function openQuickMovementModal(mode, locationCode, availableQty) {
 
   QuickMovementState.mode = mode;
   QuickMovementState.locationCode = locationCode;
+  QuickMovementState.storeId = storeId || AppState.user?.default_store_id || "";
   QuickMovementState.maxQty = Number(availableQty || 0);
 
   const modal = document.getElementById("quickMovementModal");
@@ -1459,7 +1648,8 @@ function openQuickMovementModal(mode, locationCode, availableQty) {
   // Setup Teks Informasi Barang & Lokasi
   const sku = AppState.lastSearch.sku;
   const description = AppState.lastSearch.description || "";
-  if (subtitle) subtitle.textContent = `SKU ${sku} · ${description}`;
+  const storeLabel = QuickMovementState.storeId ? ` · Toko: ${QuickMovementState.storeId}` : "";
+  if (subtitle) subtitle.textContent = `SKU ${sku} · ${description}${storeLabel}`;
   if (fromLocationEl) fromLocationEl.textContent = locationCode;
   if (availableStockEl) availableStockEl.textContent = formatNumber(QuickMovementState.maxQty);
   if (limitNoticeEl) limitNoticeEl.textContent = `Maks. ${formatNumber(QuickMovementState.maxQty)} pcs`;
@@ -1700,7 +1890,8 @@ async function handleQuickMovementSubmit() {
   const fromLocation = QuickMovementState.locationCode;
   const maxQty = QuickMovementState.maxQty;
   const sku = AppState.lastSearch?.sku;
-  const nik = AppState.user?.nik;
+  const access_id = AppState.user?.access_id;
+  const store_id = QuickMovementState.storeId || AppState.user?.default_store_id || "";
 
   const qtyInput = document.getElementById("qmQtyInput");
   const qty = parseInt(qtyInput.value, 10);
@@ -1721,8 +1912,8 @@ async function handleQuickMovementSubmit() {
     return;
   }
 
-  // Validasi NIK
-  if (!nik) {
+  // Validasi access_id
+  if (!access_id) {
     showQmError("Sesi login user tidak valid. Silakan login kembali.");
     return;
   }
@@ -1748,7 +1939,8 @@ async function handleQuickMovementSubmit() {
     qty,
     from_location: fromLocation,
     to_location: mode === "MOVE" ? toLocation : "",
-    nik,
+    access_id,
+    store_id,
   };
 
   // =========================================================
@@ -1760,26 +1952,36 @@ async function handleQuickMovementSubmit() {
   // 2. OPTIMISTIC UI: UPDATE LOCAL STATE IMMEDIATELY (0 ms)
   // =========================================================
   if (AppState.lastSearch && Array.isArray(AppState.lastSearch.locations)) {
+    const targetStore = QuickMovementState.storeId;
     if (mode === "OUT") {
       for (const loc of AppState.lastSearch.locations) {
-        if (loc.location_code === fromLocation) {
+        if (
+          loc.location_code === fromLocation &&
+          (!targetStore || !loc.store_id || loc.store_id === targetStore)
+        ) {
           loc.qty = Math.max(0, Number(loc.qty || 0) - qty);
         }
       }
     } else if (mode === "MOVE") {
       for (const loc of AppState.lastSearch.locations) {
-        if (loc.location_code === fromLocation) {
+        if (
+          loc.location_code === fromLocation &&
+          (!targetStore || !loc.store_id || loc.store_id === targetStore)
+        ) {
           loc.qty = Math.max(0, Number(loc.qty || 0) - qty);
         }
       }
       let destLoc = AppState.lastSearch.locations.find(
-        (l) => l.location_code === toLocation
+        (l) =>
+          l.location_code === toLocation &&
+          (!targetStore || !l.store_id || l.store_id === targetStore)
       );
       if (destLoc) {
         destLoc.qty = Number(destLoc.qty || 0) + qty;
       } else {
         const parts = toLocation.split("-");
         AppState.lastSearch.locations.push({
+          store_id: targetStore || AppState.user?.default_store_id || "",
           location_code: toLocation,
           zone: parts[0] || "-",
           section: parts[1] || "-",
@@ -1801,7 +2003,7 @@ async function handleQuickMovementSubmit() {
     );
 
     // Update in-memory SearchCache
-    SearchCache.set(sku, { item: AppState.lastSearch, timestamp: Date.now() });
+    SearchCache.set(getSearchCacheKey(sku), { item: AppState.lastSearch, timestamp: Date.now() });
 
     // Render immediately! (0 ms latency)
     renderSearchResult(AppState.lastSearch);
@@ -1811,19 +2013,15 @@ async function handleQuickMovementSubmit() {
   // 3. INSTANT OPERATOR FEEDBACK (0 ms)
   // =========================================================
   if (navigator.vibrate) {
-    navigator.vibrate([60, 40, 60]);
-  }
-
-  if (window.AudioFeedback) {
-    window.AudioFeedback.playSuccess();
+    navigator.vibrate([40]);
   }
 
   closeQuickMovementModal();
 
   if (mode === "OUT") {
-    showToast(`Berhasil mengeluarkan ${qty} pcs dari ${fromLocation}`);
+    showToast(`Mengeluarkan ${qty} pcs dari ${fromLocation}... Menyinkronkan`);
   } else {
-    showToast(`Berhasil memindahkan ${qty} pcs (${fromLocation} → ${toLocation})`);
+    showToast(`Memindahkan ${qty} pcs (${fromLocation} → ${toLocation})... Menyinkronkan`);
   }
 
   // =========================================================
@@ -1847,6 +2045,19 @@ async function handleQuickMovementSubmit() {
         if (!result || result.success !== true) {
           throw new Error(result?.message || "Transaksi movement ditolak server.");
         }
+
+        const serverId = result.data?.movement_id || trackingId;
+
+        // Feedback sukses final saat data benar-benar tersinkron di cloud
+        if (window.AudioFeedback) {
+          window.AudioFeedback.playSuccess();
+        }
+        if (navigator.vibrate) {
+          navigator.vibrate([60, 40, 60]);
+        }
+
+        showToast(`Sukses: Mutasi rak berhasil diperbarui di cloud! (ID: ${serverId})`);
+
         if (typeof SyncTracker !== "undefined") {
           SyncTracker.markCompleted(trackingId, payload, result.data);
         }
@@ -1895,7 +2106,7 @@ async function handleQuickMovementSubmit() {
           // Wajib rollback ke kondisi sebelum transaksi
           if (AppState.lastSearch && AppState.lastSearch.sku === sku) {
             AppState.lastSearch = backupSearchState;
-            SearchCache.set(sku, { item: backupSearchState, timestamp: Date.now() });
+            SearchCache.set(getSearchCacheKey(sku), { item: backupSearchState, timestamp: Date.now() });
             renderSearchResult(backupSearchState);
           }
 
