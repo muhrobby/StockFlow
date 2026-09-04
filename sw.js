@@ -9,7 +9,7 @@
  * 4. API & Webhooks (/webhook): Strictly Network-Only (preserves audit trail & offline QueueManager).
  */
 
-const CACHE_NAME = 'stockflow-cache-v1';
+const CACHE_NAME = 'stockflow-cache-v2';
 
 // Core static assets required for instant boot
 const PRECACHE_ASSETS = [
@@ -17,7 +17,7 @@ const PRECACHE_ASSETS = [
   './index.html',
   './manifest.json',
   './css/tailwind.min.css?v=1',
-  './css/app.css?v=2',
+  './css/app.css?v=3',
   './js/config.js?v=4',
   './js/api.js?v=4',
   './js/auth.js?v=4',

@@ -46,7 +46,18 @@ const PwaManager = {
         navigator.serviceWorker
           .register('./sw.js')
           .then((registration) => {
-            console.log('[PWA] Service Worker registered. Scope:', registration.scope);
+            // Cek update Service Worker secara aktif
+            registration.update().catch(() => {});
+
+            // Auto-refresh sekali saat Service Worker baru aktif mengambil alih kontrol
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              if (!refreshing) {
+                refreshing = true;
+                console.log('[PWA] Cache baru aktif, memuat ulang antarmuka...');
+                window.location.reload();
+              }
+            });
 
             // Listen for background updates
             registration.addEventListener('updatefound', () => {

@@ -1,17 +1,31 @@
-html,
-body {
+html {
   min-height: 100%;
   overflow-x: hidden;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
+  min-height: 100%;
+  overflow-x: hidden;
   margin: 0;
   -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 button,
 input {
   touch-action: manipulation;
+}
+
+/* Prevent accidental text highlight on tap without affecting page scroll */
+button,
+.mobile-nav,
+.desktop-nav,
+.dashboard-menu {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 
@@ -144,19 +158,8 @@ input {
 ========================================= */
 
 @media (display-mode: standalone), (display-mode: fullscreen) {
-  html,
   body {
     overscroll-behavior-y: none;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-
-  /* Allow text selection inside inputs */
-  input,
-  textarea,
-  [contenteditable="true"] {
-    -webkit-user-select: text;
-    user-select: text;
   }
 
   /* Notch & safe area support on modern mobile */
@@ -205,11 +208,17 @@ input {
 }
 
 /* =========================================
-   PAGE CONTAINER VISIBILITY SAFETY
+   PAGE CONTAINER & MODAL VISIBILITY SAFETY
 ========================================= */
 #appPage.hidden,
 #loginPage.hidden,
-#bootPage.hidden {
+#bootPage.hidden,
+#pwaInstallModal.hidden,
+#quickMovementModal.hidden,
+#scannerModal.hidden,
+#bulkUploadModal.hidden,
+#bulkResultModal.hidden,
+#movementErrorModal.hidden {
   display: none !important;
 }
 
