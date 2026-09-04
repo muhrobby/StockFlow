@@ -140,15 +140,46 @@ input {
 
 
 /* =========================================
-   PWA-LIKE MOBILE
+   PWA & STANDALONE FULLSCREEN MOBILE
 ========================================= */
 
-@media (display-mode: standalone) {
-
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  html,
   body {
     overscroll-behavior-y: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
+  /* Allow text selection inside inputs */
+  input,
+  textarea,
+  [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Notch & safe area support on modern mobile */
+  header {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .mobile-bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Suppress install prompts when already in standalone */
+  #pwaInstallModal,
+  #btnHeaderInstall,
+  #loginPwaPrompt {
+    display: none !important;
+  }
+}
+
+.pwa-standalone #pwaInstallModal,
+.pwa-standalone #btnHeaderInstall,
+.pwa-standalone #loginPwaPrompt {
+  display: none !important;
 }
 
 
@@ -167,7 +198,8 @@ input {
 }
 
 @media (max-width: 639px) {
-  #quickMovementModal > div {
+  #quickMovementModal > div,
+  #pwaInstallModal > div {
     animation: slideUpBottomSheet 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 }

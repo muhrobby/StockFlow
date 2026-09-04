@@ -44,6 +44,10 @@ function initApp() {
     window.AudioFeedback.updateToggleUI();
   }
 
+  if (window.PwaManager) {
+    window.PwaManager.init();
+  }
+
   bindEvents();
 
   bootstrap();

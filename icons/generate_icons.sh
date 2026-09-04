@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# 1. Generate icon.svg (Standard rounded icon)
+cat << 'SVG' > "$DIR/icon.svg"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="sf-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444" />
+      <stop offset="100%" stop-color="#dc2626" />
+    </linearGradient>
+  </defs>
+  <!-- Background Rounded Squircle -->
+  <rect x="24" y="24" width="464" height="464" rx="104" fill="url(#sf-grad)"/>
+  
+  <!-- Lucide Package-Search centered in 512x512 (scale factor: 11.5) -->
+  <g transform="translate(118, 118) scale(11.5)" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Isometric Box -->
+    <path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14" />
+    <path d="m7.5 4.27 9 5.15" />
+    <polyline points="3.29 7 12 12 20.71 7" />
+    <line x1="12" y1="22" x2="12" y2="12" />
+    <!-- Magnifying Glass -->
+    <circle cx="18.5" cy="15.5" r="2.5" />
+    <path d="M20.27 17.27 22 19" />
+  </g>
+</svg>
+SVG
+
+# 2. Generate icon-maskable.svg (Full bleed background for Android adaptive icon)
+cat << 'SVG' > "$DIR/icon-maskable.svg"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="sf-grad-mask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444" />
+      <stop offset="100%" stop-color="#dc2626" />
+    </linearGradient>
+  </defs>
+  <!-- Full-bleed background filling entire square -->
+  <rect x="0" y="0" width="512" height="512" fill="url(#sf-grad-mask)"/>
+  
+  <!-- Centered strictly inside the 80% safe-zone (scale factor: 9.5) -->
+  <g transform="translate(142, 142) scale(9.5)" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Isometric Box -->
+    <path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14" />
+    <path d="m7.5 4.27 9 5.15" />
+    <polyline points="3.29 7 12 12 20.71 7" />
+    <line x1="12" y1="22" x2="12" y2="12" />
+    <!-- Magnifying Glass -->
+    <circle cx="18.5" cy="15.5" r="2.5" />
+    <path d="M20.27 17.27 22 19" />
+  </g>
+</svg>
+SVG
+
+inkscape "$DIR/icon.svg" -w 512 -h 512 -o "$DIR/icon-512.png"
+inkscape "$DIR/icon.svg" -w 192 -h 192 -o "$DIR/icon-192.png"
+inkscape "$DIR/icon-maskable.svg" -w 512 -h 512 -o "$DIR/icon-maskable.png"
+inkscape "$DIR/icon.svg" -w 48 -h 48 -o "$DIR/favicon-48.png"
+convert "$DIR/favicon-48.png" "$DIR/favicon.ico"
+
+echo "Done clean re-generation!"

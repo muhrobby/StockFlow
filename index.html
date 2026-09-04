@@ -7,6 +7,15 @@
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <title>StockFlow — Warehouse Management System</title>
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#dc2626" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="StockFlow" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+    <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <link rel="stylesheet" href="./css/tailwind.min.css?v=1" />
     <link rel="stylesheet" href="./css/app.css?v=2" />
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -81,6 +90,17 @@
             <span>Masuk</span><i data-lucide="arrow-right" class="h-5 w-5"></i>
           </button>
         </form>
+
+        <div id="loginPwaPrompt" class="mt-6 hidden text-center">
+          <button
+            id="loginPwaBtn"
+            type="button"
+            class="inline-flex items-center gap-2 rounded-full bg-red-50 px-4 py-2.5 text-xs font-bold text-red-600 ring-1 ring-red-200 transition hover:bg-red-100 active:scale-95 shadow-sm"
+          >
+            <i data-lucide="smartphone" class="h-4 w-4"></i>
+            <span>Install StockFlow ke Layar Utama</span>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -151,6 +171,18 @@
                 <p id="headerUserName" class="text-sm font-bold">PIC</p>
                 <p id="headerUserNik" class="text-xs text-slate-400">-</p>
               </div>
+
+              <!-- Tombol Install PWA (Hanya muncul jika belum terinstall & browser mendukung) -->
+              <button
+                id="btnHeaderInstall"
+                type="button"
+                class="hidden h-10 items-center gap-1.5 rounded-xl bg-red-50 px-3 text-xs font-bold text-red-600 ring-1 ring-red-200 transition hover:bg-red-100 active:scale-95 shadow-sm"
+                aria-label="Install StockFlow ke Layar Utama"
+                title="Install StockFlow ke Layar Utama (Layar Penuh)"
+              >
+                <i data-lucide="download" class="h-4 w-4 shrink-0"></i>
+                <span class="hidden sm:inline">Install App</span>
+              </button>
 
               <!-- Tombol Audio Feedback Scanner (Mute / Unmute) -->
               <button
@@ -1429,6 +1461,96 @@
 
 
 
+    <!-- Modal Pop-up: Install StockFlow ke Layar Utama (PWA) -->
+    <div
+      id="pwaInstallModal"
+      class="fixed inset-0 z-[550] hidden items-end justify-center bg-slate-900/60 p-0 backdrop-blur-sm transition-opacity duration-300 sm:items-center sm:p-4"
+      aria-modal="true"
+      role="dialog"
+      aria-labelledby="pwaModalTitle"
+    >
+      <div
+        class="w-full max-w-md transform rounded-t-3xl bg-white p-6 shadow-2xl transition-all duration-300 sm:rounded-3xl animate-in fade-in slide-in-from-bottom-6"
+      >
+        <div class="flex items-start gap-4">
+          <div
+            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-red-600 text-white shadow-lg shadow-red-200"
+          >
+            <i data-lucide="package-search" class="h-7 w-7"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div
+              class="mb-1 inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-red-700"
+            >
+              <i data-lucide="sparkles" class="h-3 w-3"></i> Mode Layar Penuh
+            </div>
+            <h3 id="pwaModalTitle" class="text-lg font-black leading-tight text-slate-900">
+              Install StockFlow ke Layar Utama
+            </h3>
+            <p class="mt-1 text-xs leading-relaxed text-slate-500">
+              Aplikasi berjalan Fullscreen seperti aplikasi Android/iOS asli tanpa address bar browser.
+            </p>
+          </div>
+          <button
+            id="btnPwaClose"
+            type="button"
+            class="-mr-2 -mt-2 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 active:scale-95"
+            aria-label="Tutup"
+          >
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </div>
+
+        <div class="mt-4 space-y-2 rounded-2xl border border-slate-100 bg-slate-50 p-3.5">
+          <div class="flex items-center gap-2.5 text-xs font-semibold text-slate-700">
+            <i data-lucide="zap" class="h-4 w-4 shrink-0 text-amber-500"></i>
+            <span>Buka instan dalam <strong>&lt; 100 ms</strong> via cache HP</span>
+          </div>
+          <div class="flex items-center gap-2.5 text-xs font-semibold text-slate-700">
+            <i data-lucide="maximize" class="h-4 w-4 shrink-0 text-emerald-500"></i>
+            <span>Tampilan Fullscreen tanpa address bar & navigasi browser</span>
+          </div>
+          <div class="flex items-center gap-2.5 text-xs font-semibold text-slate-700">
+            <i data-lucide="shield-check" class="h-4 w-4 shrink-0 text-blue-500"></i>
+            <span>Bebas refresh tak sengaja & aman saat koneksi terputus</span>
+          </div>
+        </div>
+
+        <!-- Panduan Safari iOS (Hanya muncul di iPhone / iPad) -->
+        <div
+          id="pwaIosGuide"
+          class="mt-4 hidden rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-900"
+        >
+          <p class="mb-1.5 flex items-center gap-1.5 font-bold">
+            <i data-lucide="info" class="h-4 w-4 text-amber-700"></i> Panduan Install Safari iOS:
+          </p>
+          <ol class="list-inside list-decimal space-y-1 text-[11px] font-medium text-amber-800">
+            <li>Tekan tombol <strong>Share</strong> (ikon kotak dengan panah atas ⎋) di Safari.</li>
+            <li>Gulir ke bawah lalu pilih <strong>Tambah ke Layar Utama</strong> (<em>Add to Home Screen ⊞</em>).</li>
+            <li>Tekan <strong>Tambah</strong> di sudut kanan atas.</li>
+          </ol>
+        </div>
+
+        <div class="mt-5 grid grid-cols-2 gap-2">
+          <button
+            id="btnPwaDismiss"
+            type="button"
+            class="flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xs font-bold text-slate-600 transition hover:bg-slate-100 active:scale-95"
+          >
+            Nanti Saja
+          </button>
+          <button
+            id="btnPwaInstall"
+            type="button"
+            class="flex h-12 items-center justify-center gap-1.5 rounded-2xl bg-red-600 px-3 text-xs font-black text-white shadow-lg shadow-red-200 transition hover:bg-red-700 active:scale-95"
+          >
+            <i data-lucide="download" class="h-4 w-4 shrink-0"></i>
+            <span class="truncate">Install Sekarang</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div
       id="toast"
       class="pointer-events-none fixed left-1/2 top-5 z-[600] hidden w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-2xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white shadow-xl"
@@ -1440,7 +1562,8 @@
     <script src="./js/auth.js?v=4"></script>
     <script src="./js/audio.js?v=2"></script>
     <script src="./js/scanner.js?v=5"></script>
-    <script src="./js/app.js?v=17"></script>
+    <script src="./js/pwa.js?v=1"></script>
+    <script src="./js/app.js?v=18"></script>
     <script src="./js/movement.js?v=7"></script>
     <script src="./js/bulk-upload.js?v=1"></script>
   </body>
