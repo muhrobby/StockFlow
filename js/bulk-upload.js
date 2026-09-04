@@ -290,7 +290,7 @@
     const payload = {
       mode,
       access_id: user.access_id,
-      store_id: user.default_store_id,
+      store_id: String(user.default_store_id || '').trim().toUpperCase(),
       items: parsedRows
     };
 

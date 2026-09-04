@@ -27,13 +27,23 @@
    * kuat akan kita tambahkan sebelum
    * operasi IN / OUT / MOVE production.
    */
+  function normalizeUser(user) {
+    if (!user || typeof user !== 'object') return user;
+    return {
+      ...user,
+      role: String(user.role || 'USER').trim().toUpperCase(),
+      default_store_id: String(user.default_store_id || '').trim().toUpperCase(),
+      allowed_stores: String(user.allowed_stores || '').trim().toUpperCase()
+    };
+  }
+
   function saveSession(
     user
   ) {
 
     const session = {
 
-      user,
+      user: normalizeUser(user),
 
       created_at:
         Date.now(),
@@ -101,6 +111,7 @@
 
       }
 
+      session.user = normalizeUser(session.user);
 
       return session;
 

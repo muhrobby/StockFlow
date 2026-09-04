@@ -15,13 +15,13 @@ const SearchCache = new Map();
 
 function getSearchCacheKey(sku) {
   const userRole = String(AppState.user?.role || "").toUpperCase();
-  const allowedStores = String(AppState.user?.allowed_stores || "").trim();
+  const allowedStores = String(AppState.user?.allowed_stores || "").trim().toUpperCase();
   const isMultiStore =
     ["SUPER_ADMIN", "SUPER ADMIN", "OPS"].includes(userRole) &&
     allowedStores === "*";
   const storeKey = isMultiStore
     ? "ALL"
-    : AppState.user?.default_store_id || "";
+    : String(AppState.user?.default_store_id || "").trim().toUpperCase();
   return `${storeKey}:${sku}`;
 }
 
@@ -271,12 +271,17 @@ async function executeSearch(sku, options = {}) {
   hideSearchError();
 
   const userRole = String(AppState.user?.role || "").toUpperCase();
-  const allowedStores = String(AppState.user?.allowed_stores || "").trim();
+  const allowedStores = String(AppState.user?.allowed_stores || "").trim().toUpperCase();
   const isMultiStore =
     ["SUPER_ADMIN", "SUPER ADMIN", "OPS"].includes(userRole) &&
     allowedStores === "*";
-  const store_id = isMultiStore ? "*" : (AppState.user?.default_store_id || "");
+  const store_id = isMultiStore ? "*" : String(AppState.user?.default_store_id || "").trim().toUpperCase();
   const cacheKey = getSearchCacheKey(sku);
+
+  // Jika skipCache diminta (misal tombol Refresh), hapus dari cache lokal browser
+  if (options.skipCache === true) {
+    SearchCache.delete(cacheKey);
+  }
 
   // 1. Cek In-Memory Cache untuk respon instan (0 ms) - Stale-While-Revalidate
   let servedFromCache = false;
@@ -303,6 +308,8 @@ async function executeSearch(sku, options = {}) {
       role: AppState.user?.role || "USER",
       allowed_stores: AppState.user?.allowed_stores || "",
       access_id: AppState.user?.access_id || "",
+      skip_cache: options.skipCache === true,
+      force_refresh: options.skipCache === true,
     });
 
     if (!result || result.success !== true) {
@@ -1628,7 +1635,7 @@ function openQuickMovementModal(mode, locationCode, availableQty, storeId = "") 
 
   QuickMovementState.mode = mode;
   QuickMovementState.locationCode = locationCode;
-  QuickMovementState.storeId = storeId || AppState.user?.default_store_id || "";
+  QuickMovementState.storeId = String(storeId || AppState.user?.default_store_id || "").trim().toUpperCase();
   QuickMovementState.maxQty = Number(availableQty || 0);
 
   const modal = document.getElementById("quickMovementModal");
@@ -1891,7 +1898,7 @@ async function handleQuickMovementSubmit() {
   const maxQty = QuickMovementState.maxQty;
   const sku = AppState.lastSearch?.sku;
   const access_id = AppState.user?.access_id;
-  const store_id = QuickMovementState.storeId || AppState.user?.default_store_id || "";
+  const store_id = String(QuickMovementState.storeId || AppState.user?.default_store_id || "").trim().toUpperCase();
 
   const qtyInput = document.getElementById("qmQtyInput");
   const qty = parseInt(qtyInput.value, 10);
