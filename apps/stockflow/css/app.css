@@ -1,0 +1,226 @@
+html {
+  min-height: 100%;
+  overflow-x: hidden;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  min-height: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+button,
+input {
+  touch-action: manipulation;
+}
+
+/* Prevent accidental text highlight on tap without affecting page scroll */
+button,
+.mobile-nav,
+.desktop-nav,
+.dashboard-menu {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+
+/* =========================================
+   DESKTOP NAV
+========================================= */
+
+.desktop-nav {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+
+  border-radius: 0.75rem;
+
+  padding: 0.75rem 0.875rem;
+
+  font-size: 0.875rem;
+  font-weight: 700;
+
+  color: #64748b;
+
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+
+.desktop-nav svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+
+.desktop-nav-active {
+  background: #fff1f2;
+  color: #dc2626;
+}
+
+
+.desktop-nav-disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+
+/* =========================================
+   DASHBOARD MENU
+========================================= */
+
+.dashboard-menu {
+  min-height: 150px;
+
+  border-radius: 1.5rem;
+
+  border: 1px solid #e2e8f0;
+
+  background: #ffffff;
+
+  padding: 1rem;
+
+  text-align: left;
+
+  box-shadow:
+    0 1px 2px
+    rgb(15 23 42 / 0.03);
+}
+
+
+.dashboard-menu-icon {
+  display: flex;
+
+  width: 3rem;
+  height: 3rem;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 1rem;
+}
+
+
+.dashboard-menu-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+
+/* =========================================
+   MOBILE NAV
+========================================= */
+
+.mobile-bottom-nav {
+  padding-bottom:
+    env(safe-area-inset-bottom);
+}
+
+
+.mobile-nav {
+  min-height: 64px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 4px;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  color: #64748b;
+}
+
+
+.mobile-nav svg {
+  width: 20px;
+  height: 20px;
+}
+
+
+.mobile-nav-active {
+  color: #dc2626;
+}
+
+
+/* =========================================
+   PWA & STANDALONE FULLSCREEN MOBILE
+========================================= */
+
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  /* Notch & safe area support on modern mobile */
+  header {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .mobile-bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Suppress install prompts when already in standalone */
+  #pwaInstallModal,
+  #btnHeaderInstall,
+  #loginPwaPrompt {
+    display: none !important;
+  }
+}
+
+.pwa-standalone #pwaInstallModal,
+.pwa-standalone #btnHeaderInstall,
+.pwa-standalone #loginPwaPrompt {
+  display: none !important;
+}
+
+
+/* =========================================
+   MOBILE BOTTOM SHEET ANIMATION
+========================================= */
+@keyframes slideUpBottomSheet {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 639px) {
+  #quickMovementModal > div,
+  #pwaInstallModal > div {
+    animation: slideUpBottomSheet 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+/* =========================================
+   PAGE CONTAINER & MODAL VISIBILITY SAFETY
+========================================= */
+#appPage.hidden,
+#loginPage.hidden,
+#bootPage.hidden,
+#pwaInstallModal.hidden,
+#quickMovementModal.hidden,
+#scannerModal.hidden,
+#bulkUploadModal.hidden,
+#bulkResultModal.hidden,
+#movementErrorModal.hidden {
+  display: none !important;
+}
+

@@ -1,0 +1,9 @@
+{
+  "name": "@wms/shared-auth",
+  "version": "1.0.0",
+  "description": "Shared Single Source of Authentication & Session Management for WMS Apps",
+  "main": "index.js",
+  "module": "index.js",
+  "type": "module",
+  "private": true
+}
