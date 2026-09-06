@@ -1,0 +1,16 @@
+{
+  "name": "wms-portal",
+  "version": "1.0.0",
+  "description": "Warehouse Super App Portal & SSO Launcher",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./css/tailwind-input.css -o ./css/tailwind.min.css --minify",
+    "watch:css": "tailwindcss -i ./css/tailwind-input.css -o ./css/tailwind.min.css --watch",
+    "build": "npm run build:css"
+  },
+  "dependencies": {
+    "@wms/shared-auth": "*",
+    "@wms/shared-core": "*",
+    "@wms/shared-styles": "*"
+  }
+}

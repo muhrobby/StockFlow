@@ -1,0 +1,7 @@
+{
+  "name": "@wms/shared-styles",
+  "version": "1.0.0",
+  "description": "Shared Tailwind CSS preset and mobile design tokens",
+  "main": "tailwind.preset.js",
+  "private": true
+}
