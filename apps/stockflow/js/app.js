@@ -48,6 +48,10 @@ function initApp() {
     window.PwaManager.init();
   }
 
+  if (window.StockEntry) {
+    window.StockEntry.init();
+  }
+
   bindEvents();
 
   bootstrap();
@@ -588,7 +592,7 @@ function setSearchLoading(loading) {
 ========================================= */
 
 function navigateTo(page) {
-  const allowedPages = ["dashboard", "search", "movement", "history"];
+  const allowedPages = ["dashboard", "search", "movement", "stock-entry", "history"];
 
   if (!allowedPages.includes(page)) {
     page = "dashboard";
@@ -596,51 +600,51 @@ function navigateTo(page) {
 
   /**
    * Matikan kamera jika user
-   * meninggalkan halaman search.
+   * meninggalkan halaman search atau stock-entry.
    */
-  if (page !== "search" && Scanner.isVisible()) {
+  if (page !== "search" && page !== "stock-entry" && Scanner.isVisible()) {
     Scanner.close();
   }
 
   AppState.currentPage = page;
 
   const dashboardPage = document.getElementById("dashboardPage");
-
   const searchPage = document.getElementById("searchPage");
-
   const movementPage = document.getElementById("movementPage");
-
+  const stockEntryPage = document.getElementById("stockEntryPage");
   const historyPage = document.getElementById("historyPage");
 
   dashboardPage.classList.add("hidden");
-
   searchPage.classList.add("hidden");
-
   movementPage?.classList.add("hidden");
-
+  stockEntryPage?.classList.add("hidden");
   historyPage?.classList.add("hidden");
 
   if (page === "dashboard") {
     dashboardPage.classList.remove("hidden");
-
     setHeader("Selamat bekerja", "Dashboard");
   }
 
   if (page === "search") {
     searchPage.classList.remove("hidden");
-
     setHeader("StockFlow", "Cari Barang");
+  }
+
+  if (page === "stock-entry") {
+    stockEntryPage?.classList.remove("hidden");
+    setHeader("StockFlow", "Pendataan Rak");
+    if (window.StockEntry) {
+      window.StockEntry.loadStoreLocations();
+    }
   }
 
   if (page === "movement") {
     movementPage?.classList.remove("hidden");
-
     setHeader("StockFlow", "Movement");
   }
 
   if (page === "history") {
     historyPage?.classList.remove("hidden");
-
     setHeader("StockFlow", "Riwayat");
   }
 
@@ -779,6 +783,10 @@ function showApp() {
   }
   if (typeof QueueManager !== "undefined") {
     QueueManager.updateBanner();
+  }
+
+  if (window.StockEntry) {
+    window.StockEntry.loadStoreLocations();
   }
 
   document.getElementById("bootPage").classList.add("hidden");
@@ -942,18 +950,30 @@ function escapeHtml(value) {
    TOAST
 ========================================= */
 
-function showToast(message) {
+function showToast(message, type = "info") {
   const toast = document.getElementById("toast");
+  if (!toast) return;
 
   toast.textContent = message;
+
+  // Visual type styling
+  const baseClasses = "pointer-events-none fixed left-1/2 top-5 z-[600] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-2xl px-4 py-3.5 text-center text-sm font-black shadow-2xl transition-all";
+  if (type === "success") {
+    toast.className = `${baseClasses} bg-emerald-600 text-white ring-2 ring-white/30`;
+  } else if (type === "error") {
+    toast.className = `${baseClasses} bg-red-600 text-white ring-2 ring-white/30`;
+  } else {
+    toast.className = `${baseClasses} bg-slate-900 text-white`;
+  }
 
   toast.classList.remove("hidden");
 
   clearTimeout(window.__warehouseToast);
 
+  const duration = type === "success" ? 4000 : 2500;
   window.__warehouseToast = setTimeout(() => {
     toast.classList.add("hidden");
-  }, 2500);
+  }, duration);
 }
 
 /* =========================================
@@ -1097,11 +1117,17 @@ const QueueManager = {
     let successCount = 0;
     for (const item of [...queue]) {
       try {
-        const result = await Api.post("/warehouse/movement", item.payload);
+        let result;
+        if (item.type === "BATCH_ENTRY" || item.payload?.items) {
+          result = await Api.submitBatchLocationEntry(item.payload);
+        } else {
+          result = await Api.post("/warehouse/movement", item.payload);
+        }
+
         if (result && result.success === true) {
           this.dequeue(item.id);
           if (typeof SyncTracker !== "undefined") {
-            SyncTracker.markCompleted(item.id, item.payload, result.data);
+            SyncTracker.markCompleted(item.id, item.payload, result.data || result);
           }
           successCount++;
         } else {
@@ -1427,7 +1453,7 @@ const SyncTracker = {
 
         // In-flight items
         for (const item of inFlightList) {
-          const typeName = { IN: "Masuk", OUT: "Keluar", MOVE: "Pindah" }[item.payload?.type] || item.payload?.type || "Movement";
+          const typeName = { IN: "Masuk", OUT: "Keluar", MOVE: "Pindah", SET: "Opname", ADD: "Inbound" }[item.payload?.type] || item.payload?.type || "Movement";
           const route = [item.payload?.from_location, item.payload?.to_location].filter(Boolean).join(" → ") || "-";
           html += `
             <div class="flex items-center justify-between gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-3">
@@ -1454,7 +1480,7 @@ const SyncTracker = {
 
         // Offline queued items
         for (const item of queueList) {
-          const typeName = { IN: "Masuk", OUT: "Keluar", MOVE: "Pindah" }[item.payload?.type] || item.payload?.type || "Movement";
+          const typeName = { IN: "Masuk", OUT: "Keluar", MOVE: "Pindah", SET: "Opname", ADD: "Inbound" }[item.payload?.type] || item.payload?.type || "Movement";
           const route = [item.payload?.from_location, item.payload?.to_location].filter(Boolean).join(" → ") || "-";
           html += `
             <div class="flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50/60 p-3">
@@ -1498,7 +1524,7 @@ const SyncTracker = {
         recentSection.classList.remove("hidden");
         let recentHtml = "";
         for (const item of recentList) {
-          const typeName = { IN: "Masuk", OUT: "Keluar", MOVE: "Pindah" }[item.payload?.type] || item.payload?.type || "Movement";
+          const typeName = { IN: "Masuk", OUT: "Keluar", MOVE: "Pindah", SET: "Opname", ADD: "Inbound" }[item.payload?.type] || item.payload?.type || "Movement";
           const route = [item.payload?.from_location, item.payload?.to_location].filter(Boolean).join(" → ") || "-";
           recentHtml += `
             <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-3">
