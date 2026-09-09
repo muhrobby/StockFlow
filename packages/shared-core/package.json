@@ -1,0 +1,9 @@
+{
+  "name": "@wms/shared-core",
+  "version": "1.0.0",
+  "description": "Shared Core Utilities for WMS Apps (Synthesizer Audio, Offline Queue, Helpers)",
+  "main": "index.js",
+  "module": "index.js",
+  "type": "module",
+  "private": true
+}

@@ -1,0 +1,49 @@
+html {
+  min-height: 100%;
+  overflow-x: hidden;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  min-height: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+button,
+input {
+  touch-action: manipulation;
+}
+
+/* Prevent accidental text highlight on tap without affecting page scroll */
+button,
+a,
+.app-card {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* PWA & Standalone mobile safe-area */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  header {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+/* Page Container & Element Visibility Safety */
+#loginView.hidden,
+#portalView.hidden,
+.hidden,
+[hidden] {
+  display: none !important;
+}

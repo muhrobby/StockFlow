@@ -1,11 +1,21 @@
 {
-  "name": "stockflow-wms",
-  "version": "1.0.0",
-  "description": "StockFlow Warehouse Management System - Mobile First Scanner & Movement",
+  "name": "wms-monorepo",
+  "version": "2.0.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "build:css": "tailwindcss -i ./css/tailwind-input.css -o ./css/tailwind.min.css --minify",
-    "watch:css": "tailwindcss -i ./css/tailwind-input.css -o ./css/tailwind.min.css --watch"
+    "start": "node scripts/build.js && node scripts/serve.js",
+    "serve": "node scripts/serve.js",
+    "build": "node scripts/build.js",
+    "build:portal": "npm --workspace=apps/portal run build",
+    "build:stockflow": "npm --workspace=apps/stockflow run build",
+    "build:packing": "npm --workspace=apps/packing run build",
+    "dev:packing": "npm --workspace=apps/packing run dev",
+    "dev:stockflow": "npm --workspace=apps/stockflow run watch:css",
+    "dev:portal": "npm --workspace=apps/portal run watch:css"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.17",
