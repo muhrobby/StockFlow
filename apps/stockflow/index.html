@@ -138,6 +138,9 @@
           <button type="button" class="desktop-nav" data-page="movement">
             <i data-lucide="arrow-left-right"></i>Movement
           </button>
+          <button type="button" class="desktop-nav" data-page="stock-entry">
+            <i data-lucide="boxes"></i>Pendataan Rak
+          </button>
           <button type="button" class="desktop-nav" data-page="history">
             <i data-lucide="history"></i>Riwayat
           </button>
@@ -389,7 +392,7 @@
               Pilih aktivitas warehouse.
             </p>
           </div>
-          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             <button
               type="button"
               data-page="search"
@@ -401,6 +404,19 @@
               <div class="mt-4">
                 <h3 class="font-black">Cari Barang</h3>
                 <p class="mt-1 text-xs text-slate-400">Cari SKU dan lokasi</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              data-page="stock-entry"
+              class="dashboard-menu transition hover:border-amber-200 hover:shadow-md active:scale-[.98]"
+            >
+              <div class="dashboard-menu-icon bg-amber-50 text-amber-600">
+                <i data-lucide="boxes"></i>
+              </div>
+              <div class="mt-4">
+                <h3 class="font-black">Pendataan Rak</h3>
+                <p class="mt-1 text-xs text-slate-400">Opname & Inbound</p>
               </div>
             </button>
             <button
@@ -832,6 +848,324 @@
           </div>
         </section>
 
+        <!-- SECTION: PENDATAAN & STOCK OPNAME RAK -->
+        <section
+          id="stockEntryPage"
+          class="mx-auto hidden max-w-5xl px-4 py-5 lg:px-8 lg:py-8"
+        >
+          <!-- CARD HEADER & MODE SWITCH -->
+          <div class="mb-5 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-start gap-3 min-w-0">
+              <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+                <i data-lucide="boxes" class="h-6 w-6"></i>
+              </div>
+              <div class="min-w-0">
+                <h1 class="text-xl font-black">Pendataan Rak Gudang</h1>
+                <p class="mt-1 text-sm leading-5 text-slate-500" id="stockEntryModeDesc">
+                  Kunci lokasi rak dan data barang fisik (Stock Opname & Inbound).
+                </p>
+              </div>
+            </div>
+
+            <!-- MODE SWITCH (SET vs ADD) -->
+            <div class="inline-flex rounded-2xl bg-slate-100 p-1.5 ring-1 ring-slate-200/60 self-start sm:self-auto shrink-0">
+              <button
+                type="button"
+                id="btnStockEntryModeSet"
+                class="rounded-xl px-4 py-2 text-xs font-black transition bg-white text-slate-900 shadow-sm flex items-center gap-1.5"
+              >
+                <i data-lucide="clipboard-check" class="h-4 w-4 text-emerald-600"></i>
+                <span>Stock Opname (SET)</span>
+              </button>
+              <button
+                type="button"
+                id="btnStockEntryModeAdd"
+                class="rounded-xl px-4 py-2 text-xs font-black transition text-slate-500 hover:text-slate-900 flex items-center gap-1.5"
+              >
+                <i data-lucide="package-plus" class="h-4 w-4 text-blue-600"></i>
+                <span>Tambah Stok (ADD)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- PANEL 1: PILIH & KUNCI LOKASI RAK -->
+          <div class="mb-5 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:p-6">
+            <label for="stockEntryLocationInput" class="mb-2 block text-sm font-bold">
+              1. Lokasi Rak Gudang
+            </label>
+            <!-- Baris Input Lokasi dan Tombol Scan: PASTI BERDAMPINGAN di Mobile & Desktop -->
+            <div class="flex items-center gap-2">
+              <div id="locationComboboxWrapper" class="relative min-w-0 flex-1">
+                <i data-lucide="map-pin" class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></i>
+                <input
+                  id="stockEntryLocationInput"
+                  type="text"
+                  placeholder="Ketik atau scan kode rak (contoh: A-01-P10)..."
+                  autocomplete="off"
+                  class="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-base font-bold uppercase outline-none transition focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-100 placeholder:text-sm placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 disabled:bg-slate-100 disabled:text-slate-500"
+                />
+                <!-- Floating Combobox List -->
+                <div
+                  id="locationComboboxMenu"
+                  class="absolute left-0 right-0 top-full z-50 mt-2 hidden max-h-60 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl"
+                >
+                  <div id="locationComboboxList" class="p-1"></div>
+                </div>
+              </div>
+
+              <!-- Tombol Scan Barcode Lokasi (PASTI di samping input form di mobile dan desktop) -->
+              <button
+                id="btnScanEntryLocation"
+                type="button"
+                class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white transition hover:bg-slate-800 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-40"
+                title="Scan Barcode Rak"
+                aria-label="Scan Barcode Rak"
+              >
+                <i data-lucide="scan-barcode" class="h-6 w-6"></i>
+              </button>
+            </div>
+
+            <!-- Baris Tombol Aksi Kunci / Ganti Rak: Full Width di Mobile -->
+            <div class="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <button
+                id="btnLockLocation"
+                type="button"
+                class="flex h-14 w-full sm:w-auto items-center justify-center gap-2 rounded-2xl bg-red-600 px-6 font-black text-white shadow-sm transition hover:bg-red-700 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <i data-lucide="lock" class="h-5 w-5"></i>
+                <span>Kunci Rak Ini</span>
+              </button>
+
+              <button
+                id="btnUnlockLocation"
+                type="button"
+                class="hidden flex h-14 w-full sm:w-auto items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 font-bold text-slate-700 hover:bg-slate-50 transition active:scale-[.98]"
+              >
+                <i data-lucide="unlock" class="h-5 w-5 text-slate-400"></i>
+                <span>Ganti Rak</span>
+              </button>
+            </div>
+
+            <!-- Badge Lokasi Terkunci -->
+            <div id="lockedLocationBadge" class="mt-3 hidden inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-3.5 py-1.5 text-xs font-black text-emerald-800 ring-1 ring-emerald-200">
+              🔒 Terkunci
+            </div>
+          </div>
+
+          <!-- PANEL 2: INPUT SKU & KUANTITAS (Aktif saat lokasi terkunci) -->
+          <div
+            id="stockEntryItemSection"
+            class="mb-5 hidden rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:p-6"
+          >
+            <div class="mb-4 flex items-center justify-between">
+              <h2 class="text-base font-black text-slate-900">2. Input SKU Barang di Rak</h2>
+              <span class="text-xs text-slate-400">Verifikasi database otomatis</span>
+            </div>
+
+            <!-- SKU INPUT & SCAN -->
+            <div class="space-y-4">
+              <div>
+                <label for="stockEntrySkuInput" class="mb-2 block text-sm font-bold">SKU Barang</label>
+                <div class="flex gap-2">
+                  <div class="relative min-w-0 flex-1">
+                    <i data-lucide="barcode" class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></i>
+                    <input
+                      id="stockEntrySkuInput"
+                      type="text"
+                      placeholder="Scan barcode atau ketik SKU barang..."
+                      autocomplete="off"
+                      class="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-12 text-base font-bold outline-none transition focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-100 placeholder:text-sm placeholder:normal-case placeholder:font-normal placeholder:text-slate-400"
+                    />
+                    <div id="skuSearchSpinner" class="hidden absolute right-4 top-1/2 -translate-y-1/2">
+                      <div class="h-5 w-5 animate-spin rounded-full border-2 border-red-200 border-t-red-600"></div>
+                    </div>
+                  </div>
+                  <button
+                    id="btnScanEntrySku"
+                    type="button"
+                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white transition hover:bg-slate-800 active:scale-[.98]"
+                    title="Scan Barcode SKU"
+                    aria-label="Scan Barcode SKU"
+                  >
+                    <i data-lucide="scan-barcode" class="h-6 w-6"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- KARTU HASIL VERIFIKASI ARTIKEL MASTER (Seragam dengan Search Card) -->
+              <div
+                id="verifiedArticleCard"
+                class="hidden rounded-2xl bg-slate-900 p-4 text-white shadow-sm transition"
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="font-mono text-xs font-bold text-red-400" id="verifiedArticleSku">SKU: -</span>
+                      <span class="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-400">Terdaftar</span>
+                    </div>
+                    <h3 class="mt-1 text-base font-black leading-snug text-white" id="verifiedArticleName">-</h3>
+                    <p class="mt-1 text-xs text-slate-400" id="verifiedArticleCurrentStock">Stok di rak: 0 pcs</p>
+                  </div>
+                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
+                    <i data-lucide="package" class="h-5 w-5"></i>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ALERT ERROR SKU TIDAK DITEMUKAN -->
+              <div
+                id="skuErrorCard"
+                class="hidden rounded-2xl border border-red-200 bg-red-50 p-4"
+              >
+                <div class="flex gap-3">
+                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600">
+                    <i data-lucide="triangle-alert" class="h-5 w-5"></i>
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-black text-red-900">SKU Tidak Ditemukan</h4>
+                    <p id="skuErrorMessage" class="mt-1 text-xs text-red-700">-</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- INPUT KUANTITAS MANUAL & STEPPER -->
+              <div>
+                <label for="stockEntryQtyInput" class="mb-2 block text-sm font-bold">Kuantitas Fisik Barang</label>
+                <div class="flex flex-wrap items-center gap-2.5">
+                  <div class="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      id="btnQtyMinus"
+                      class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 transition hover:bg-slate-200 active:scale-95 font-black text-xl"
+                    >
+                      -
+                    </button>
+                    <input
+                      id="stockEntryQtyInput"
+                      type="number"
+                      min="0"
+                      value="1"
+                      class="h-14 w-24 sm:w-28 rounded-2xl border border-slate-200 bg-slate-50 text-center text-xl font-black text-slate-900 outline-none transition focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-100"
+                    />
+                    <button
+                      type="button"
+                      id="btnQtyPlus"
+                      class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 transition hover:bg-slate-200 active:scale-95 font-black text-xl"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <!-- Tombol Cepat Penambah (+1, +5, +10) -->
+                  <div class="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      id="btnQuickAdd1"
+                      class="flex h-14 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 sm:px-4 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-95"
+                    >
+                      +1
+                    </button>
+                    <button
+                      type="button"
+                      id="btnQuickAdd5"
+                      class="flex h-14 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 sm:px-4 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-95"
+                    >
+                      +5
+                    </button>
+                    <button
+                      type="button"
+                      id="btnQuickAdd10"
+                      class="flex h-14 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 sm:px-4 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-95"
+                    >
+                      +10
+                    </button>
+                  </div>
+
+                  <!-- Tombol Tambah ke Staging Rak: Full width di mobile, auto di desktop -->
+                  <button
+                    id="btnAddStagedItem"
+                    type="button"
+                    disabled
+                    class="w-full sm:w-auto sm:ml-auto flex h-14 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 font-black text-white transition hover:bg-slate-800 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <i data-lucide="plus" class="h-5 w-5"></i>
+                    <span>Tambah ke Rak</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL 3: DAFTAR BARANG DI RAK (STAGING TABLE & MOBILE CARDS) -->
+          <div
+            id="stockEntryStagingSection"
+            class="hidden rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:p-6"
+          >
+            <div class="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+              <div class="flex items-center gap-2">
+                <h3 class="text-sm font-black uppercase tracking-wider text-slate-900">
+                  Daftar Barang di Rak Ini
+                </h3>
+                <span id="stagedTotalCountBadge" class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-black text-slate-700">
+                  0 SKU
+                </span>
+              </div>
+              <button
+                type="button"
+                id="btnClearStagedItems"
+                class="text-xs font-bold text-slate-400 hover:text-red-600 transition"
+              >
+                Kosongkan
+              </button>
+            </div>
+
+            <!-- Empty State -->
+            <div id="stagedEmptyState" class="py-10 text-center">
+              <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
+                <i data-lucide="boxes" class="h-7 w-7"></i>
+              </div>
+              <p class="mt-3 text-sm font-bold text-slate-700">Belum ada barang di rak ini</p>
+              <p class="mt-1 text-xs text-slate-400">Pindai barcode atau ketik SKU untuk mulai mendata.</p>
+            </div>
+
+            <!-- 1. Tampilan Mobile (< sm): Card-based List yang Responsive -->
+            <div id="stagedMobileList" class="block sm:hidden space-y-3"></div>
+
+            <!-- 2. Tampilan Tablet & Desktop (>= sm): Table Container -->
+            <div id="stagedDesktopTableContainer" class="hidden sm:block overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead>
+                  <tr class="border-b border-slate-100 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <th class="py-2.5 px-3">SKU & Nama Barang</th>
+                    <th class="py-2.5 px-3 text-center">Stok Sistem</th>
+                    <th class="py-2.5 px-3 text-center">Qty Fisik</th>
+                    <th class="py-2.5 px-3 text-center">Selisih</th>
+                    <th class="py-2.5 px-3 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="stagedTableBody"></tbody>
+              </table>
+            </div>
+
+            <!-- Summary & Submit Bar -->
+            <div class="mt-6 border-t border-slate-100 pt-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div class="text-sm text-slate-500">
+                Akumulasi: <strong id="stagedSummarySkus" class="font-black text-slate-900">0 SKU</strong> · <strong id="stagedSummaryPcs" class="font-black text-slate-900">0 Pcs</strong>
+              </div>
+
+              <button
+                id="btnSubmitStockEntry"
+                type="button"
+                disabled
+                class="flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl bg-red-600 px-8 font-black text-white shadow-lg shadow-red-200 transition hover:bg-red-700 active:scale-[.99] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <i data-lucide="check-circle-2" class="h-5 w-5"></i>
+                <span>Simpan Data Rak Ini</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
         <section
           id="historyPage"
           class="mx-auto hidden max-w-5xl px-4 py-5 lg:px-8 lg:py-8"
@@ -858,7 +1192,7 @@
       <nav
         class="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white lg:hidden"
       >
-        <div class="grid grid-cols-4">
+        <div class="grid grid-cols-5">
           <button
             type="button"
             class="mobile-nav mobile-nav-active"
@@ -867,6 +1201,8 @@
             <i data-lucide="house"></i><span>Home</span></button
           ><button type="button" class="mobile-nav" data-page="search">
             <i data-lucide="search"></i><span>Cari</span></button
+          ><button type="button" class="mobile-nav" data-page="stock-entry">
+            <i data-lucide="boxes"></i><span>Pendataan</span></button
           ><button type="button" class="mobile-nav" data-page="movement">
             <i data-lucide="arrow-left-right"></i><span>Movement</span></button
           ><button type="button" class="mobile-nav" data-page="history">
@@ -1582,8 +1918,9 @@
     <script src="./js/audio.js?v=2"></script>
     <script src="./js/scanner.js?v=5"></script>
     <script src="./js/pwa.js?v=1"></script>
-    <script src="./js/app.js?v=18"></script>
+    <script src="./js/stock-entry.js?v=2"></script>
     <script src="./js/movement.js?v=7"></script>
     <script src="./js/bulk-upload.js?v=1"></script>
+    <script src="./js/app.js?v=19"></script>
   </body>
 </html>
