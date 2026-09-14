@@ -51,10 +51,6 @@ function initApp() {
       try { window.AudioFeedback.updateToggleUI(); } catch (_) {}
     }
 
-    if (window.PwaManager?.init) {
-      try { window.PwaManager.init(); } catch (_) {}
-    }
-
     if (window.StockEntry?.init) {
       try { window.StockEntry.init(); } catch (e) { console.warn('[Init] StockEntry init warning:', e); }
     }
@@ -818,6 +814,13 @@ function showAuthGuard(state = "no_session", user = null) {
   } else {
     if (guardNoSession) guardNoSession.classList.remove("hidden");
     if (guardForbidden) guardForbidden.classList.add("hidden");
+  }
+
+  // Bersihkan hash di URL jika belum ada sesi agar tidak membingungkan pengguna
+  if (window.location.hash) {
+    try {
+      history.replaceState(null, "", window.location.pathname);
+    } catch (_) {}
   }
 
   try {
