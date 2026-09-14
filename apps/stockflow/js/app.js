@@ -26,14 +26,8 @@ function getSearchCacheKey(sku) {
 }
 
 /* =========================================
-   INIT
+   INIT & LIFECYCLE
 ========================================= */
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initApp);
-} else {
-  initApp();
-}
 
 function initApp() {
   try {
@@ -80,7 +74,10 @@ function initApp() {
 ========================================= */
 
 function bindEvents() {
-  document.getElementById("loginForm").addEventListener("submit", handleLogin);
+  const loginForm = document.getElementById("loginForm");
+  if (loginForm) {
+    loginForm.addEventListener("submit", handleLogin);
+  }
 
   document
     .getElementById("searchForm")
@@ -162,22 +159,25 @@ function bindEvents() {
 function bootstrap() {
   const session = Auth.getSession();
 
-  if (session && session.user) {
-    AppState.user = session.user;
-
-    showApp();
-
-    const allowedPages = ["dashboard", "search", "movement", "stock-entry", "history"];
-    const hashPage = window.location.hash.replace(/^#/, "").trim();
-    const targetPage = allowedPages.includes(hashPage) ? hashPage : "dashboard";
-
-    navigateTo(targetPage);
-
+  if (!session || !session.user) {
+    showAuthGuard("no_session");
     return;
   }
 
-  // Jika belum ada sesi aktif, tampilkan form login StockFlow secara aman
-  showLogin();
+  if (!Auth.canAccessApp("stockflow")) {
+    showAuthGuard("forbidden", session.user);
+    return;
+  }
+
+  AppState.user = session.user;
+
+  showApp();
+
+  const allowedPages = ["dashboard", "search", "movement", "stock-entry", "history"];
+  const hashPage = window.location.hash.replace(/^#/, "").trim();
+  const targetPage = allowedPages.includes(hashPage) ? hashPage : "dashboard";
+
+  navigateTo(targetPage);
 }
 
 /* =========================================
@@ -776,14 +776,33 @@ function setLoginLoading(loading) {
    PAGE STATE
 ========================================= */
 
-function showLogin() {
+function showAuthGuard(state = "no_session", user = null) {
   const appPage = document.getElementById("appPage");
-  appPage.classList.add("hidden");
-  appPage.classList.remove("lg:flex");
+  if (appPage) {
+    appPage.classList.add("hidden");
+    appPage.classList.remove("lg:flex");
+  }
 
   const loginPage = document.getElementById("loginPage");
-  loginPage.classList.remove("hidden");
-  loginPage.classList.add("flex");
+  if (loginPage) {
+    loginPage.classList.remove("hidden");
+    loginPage.classList.add("flex");
+  }
+
+  const guardNoSession = document.getElementById("guardNoSession");
+  const guardForbidden = document.getElementById("guardForbidden");
+  const guardUserAccessId = document.getElementById("guardUserAccessId");
+
+  if (state === "forbidden") {
+    if (guardNoSession) guardNoSession.classList.add("hidden");
+    if (guardForbidden) guardForbidden.classList.remove("hidden");
+    if (guardUserAccessId) {
+      guardUserAccessId.textContent = user?.access_id || user?.nik || "User";
+    }
+  } else {
+    if (guardNoSession) guardNoSession.classList.remove("hidden");
+    if (guardForbidden) guardForbidden.classList.add("hidden");
+  }
 
   if (typeof SyncTracker !== "undefined") {
     SyncTracker.reset();
@@ -792,13 +811,18 @@ function showLogin() {
     QueueManager.updateBanner();
   }
 
-  document.getElementById("bootPage").classList.add("hidden");
+  const bootPage = document.getElementById("bootPage");
+  if (bootPage) {
+    bootPage.classList.add("hidden");
+  }
 
-  lucide.createIcons();
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+}
 
-  setTimeout(() => {
-    document.getElementById("nikInput").focus();
-  }, 100);
+function showLogin() {
+  showAuthGuard("no_session");
 }
 
 function showApp() {
@@ -868,7 +892,11 @@ function renderUser() {
 ========================================= */
 
 async function logout() {
-  await Scanner.close();
+  if (window.Scanner) {
+    try {
+      await Scanner.close();
+    } catch (_) {}
+  }
 
   Auth.clearSession();
 
@@ -888,17 +916,15 @@ async function logout() {
     QueueManager.updateBanner();
   }
 
-  document.getElementById("nikInput").value = "";
-
-  document.getElementById("skuInput").value = "";
+  const skuInput = document.getElementById("skuInput");
+  if (skuInput) skuInput.value = "";
 
   clearSearchResult();
 
   hideSearchError();
 
-  showLogin();
-
-  showToast("Anda telah keluar.");
+  // Kembali ke Portal Utama
+  window.location.href = "/";
 }
 
 /* =========================================
@@ -2206,4 +2232,13 @@ async function handleQuickMovementSubmit() {
   sendMovement();
 }
 
+// Global exposure untuk integrasi modular
+window.QueueManager = QueueManager;
+window.SyncTracker = SyncTracker;
 
+// Boot lifecycle: dijalankan setelah seluruh modul & konstanta terdefinisi sempurna
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
