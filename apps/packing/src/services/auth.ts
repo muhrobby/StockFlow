@@ -24,6 +24,19 @@ export function getStoreCode(): string {
   return user?.default_store_id || 'STR-001';
 }
 
+export const MASTER_STORES: Record<string, { store_name: string; address: string; city: string }> = {
+  'STR-300': {
+    store_name: 'Gudang Utama Mangga Dua',
+    address: 'Jl. Mangga Dua Raya No. 88, Jakarta Pusat',
+    city: 'Jakarta Pusat'
+  },
+  'STR-301': {
+    store_name: 'Cabang Tunjungan Plaza',
+    address: 'Jl. Embong Malang No. 7-21, Surabaya',
+    city: 'Surabaya'
+  }
+};
+
 const STORE_ADDRESS_CACHE_PREFIX = 'packing_store_address_';
 
 export function getCachedStoreAddress(storeId: string): string | null {
@@ -43,10 +56,17 @@ export function setCachedStoreAddress(storeId: string, address: string): void {
 export function getStoreAddress(): string {
   const store = getStoreCode();
   const cached = getCachedStoreAddress(store);
-  if (cached) return cached;
+  if (cached && !cached.startsWith('Gudang Cabang -')) return cached;
+
+  const master = MASTER_STORES[store];
+  if (master?.address) return master.address;
+
   const user = getCurrentSession();
-  if (user?.store_address) return user.store_address;
-  return `Gudang Cabang - ${store}`;
+  if (user?.store_address && !user.store_address.startsWith('Gudang Cabang -')) {
+    return user.store_address;
+  }
+
+  return 'Jl. Mangga Dua Raya No. 88, Jakarta Pusat';
 }
 
 export function checkPackingAccess(): boolean {
