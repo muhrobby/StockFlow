@@ -31,6 +31,7 @@ import {
 } from './services/packingApi';
 import { packingQueueManager } from './services/packingQueueManager';
 import { QueuedPackingJob, cleanupSyncedJobs } from './services/packingQueueDb';
+import { applyCanvasWatermark, formatStampTime } from './services/watermark';
 
 const MAX_PHOTOS = 6;
 
@@ -117,7 +118,7 @@ export const App: React.FC = () => {
         if (result) {
           // Kompresi canvas ringan di browser jika resolusi terlalu tinggi
           const img = new Image();
-          img.onload = () => {
+          img.onload = async () => {
             const canvas = document.createElement('canvas');
             const maxWidth = 1280;
             let w = img.width;
@@ -132,8 +133,16 @@ export const App: React.FC = () => {
             if (ctx) {
               ctx.drawImage(img, 0, 0, w, h);
 
-              // Kualitas JPEG 0.82 menghasilkan gambar jernih dan hemat bandwidth (~120-180 KB)
-              const compressed = canvas.toDataURL('image/jpeg', 0.82);
+              // BUBURKAN STEMPEL RESMI & LOGO PADA FOTO GALERI
+              await applyCanvasWatermark(canvas, {
+                address: storeAddress,
+                timestamp: formatStampTime(new Date()),
+                invNo: invNo.trim().toUpperCase() || undefined,
+                accessId: session?.access_id
+              });
+
+              // Kualitas JPEG 0.85 menghasilkan gambar jernih dan hemat bandwidth (~120-180 KB)
+              const compressed = canvas.toDataURL('image/jpeg', 0.85);
               handleAddPhoto(compressed);
             } else {
               handleAddPhoto(result);

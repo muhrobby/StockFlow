@@ -1,6 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Camera, Check, X, RotateCcw, AlertCircle } from 'lucide-react';
 import { audio } from '../services/audio';
+import {
+  applyCanvasWatermark,
+  getLiveStampTime,
+  LOGO_ASSET_URL,
+  preloadLogoImage
+} from '../services/watermark';
 
 interface ContinuousCameraModalProps {
   isOpen: boolean;
@@ -29,6 +35,7 @@ export const ContinuousCameraModal: React.FC<ContinuousCameraModalProps> = ({
   const [isFlashing, setIsFlashing] = useState(false);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [lastPhoto, setLastPhoto] = useState<string | null>(null);
+  const [liveTime, setLiveTime] = useState<string>(getLiveStampTime());
 
   useEffect(() => {
     if (!isOpen) {
@@ -37,9 +44,16 @@ export const ContinuousCameraModal: React.FC<ContinuousCameraModalProps> = ({
       return;
     }
 
+    preloadLogoImage().catch(() => {});
     startCamera();
 
+    // Jam berdetak setiap detik secara real-time pada live HUD
+    const timer = setInterval(() => {
+      setLiveTime(getLiveStampTime());
+    }, 1000);
+
     return () => {
+      clearInterval(timer);
       stopCamera();
     };
   }, [isOpen, facingMode]);
@@ -78,7 +92,7 @@ export const ContinuousCameraModal: React.FC<ContinuousCameraModalProps> = ({
     }
   };
 
-  const handleCapture = () => {
+  const handleCapture = async () => {
     if (currentCount >= maxCount) {
       audio.error();
       return;
@@ -103,10 +117,20 @@ export const ContinuousCameraModal: React.FC<ContinuousCameraModalProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Gambar frame kamera aktual
     ctx.drawImage(video, 0, 0, w, h);
 
-    // Kualitas JPEG 0.82 menghasilkan gambar sangat jernih dan hemat bandwidth (~120-180 KB)
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+    // BUBURKAN STEMPEL RESMI & LOGO LANGSUNG KE CANVAS (<10 ms)
+    const currentCaptureTime = getLiveStampTime();
+    await applyCanvasWatermark(canvas, {
+      address: address || 'Gudang Operasional StockFlow',
+      timestamp: currentCaptureTime,
+      accessId,
+      invNo
+    });
+
+    // Kualitas JPEG 0.85 menghasilkan gambar tajam dan hemat bandwidth (~120-180 KB)
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
 
     // Audio & Visual flash feedback
     audio.shutter();
@@ -158,7 +182,7 @@ export const ContinuousCameraModal: React.FC<ContinuousCameraModalProps> = ({
         </div>
       </div>
 
-      {/* CAMERA VIEWFINDER */}
+      {/* CAMERA VIEWFINDER DENGAN LIVE HUD OVERLAY */}
       <div className="relative flex-1 bg-black flex items-center justify-center overflow-hidden">
         {cameraError ? (
           <div className="text-center p-6 max-w-sm text-white">
@@ -182,8 +206,43 @@ export const ContinuousCameraModal: React.FC<ContinuousCameraModalProps> = ({
               muted
               className="w-full h-full object-cover"
             />
+
             {/* CROSSHAIR GUIDES */}
-            <div className="absolute inset-8 border border-white/25 rounded-2xl pointer-events-none" />
+            <div className="absolute inset-8 border border-white/20 rounded-2xl pointer-events-none" />
+
+            {/* LIVE HUD OVERLAY - BRAND LOGO (SUDUT KANAN ATAS) */}
+            <div className="absolute top-4 right-4 z-20 pointer-events-none">
+              <img
+                src={LOGO_ASSET_URL}
+                alt="Brand Logo"
+                className="w-20 sm:w-28 h-auto object-contain opacity-95 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+              />
+            </div>
+
+            {/* LIVE HUD OVERLAY - TIMESTAMP & STORE ADDRESS (SUDUT KANAN BAWAH) */}
+            <div className="absolute bottom-6 right-6 z-20 pointer-events-none text-right max-w-[75%] space-y-1">
+              {/* LIVE TIMESTAMP */}
+              <div
+                className="text-white text-xs sm:text-sm font-semibold tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+                style={{
+                  textShadow:
+                    '0 0 3px #000, 0 0 5px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
+                }}
+              >
+                {liveTime}
+              </div>
+
+              {/* STORE ADDRESS */}
+              <div
+                className="text-white text-[11px] sm:text-xs font-medium leading-snug drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] line-clamp-3"
+                style={{
+                  textShadow:
+                    '0 0 3px #000, 0 0 5px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
+                }}
+              >
+                {address || 'Gudang Operasional StockFlow'}
+              </div>
+            </div>
           </>
         )}
       </div>
