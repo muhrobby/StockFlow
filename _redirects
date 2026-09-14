@@ -1,4 +1,6 @@
 # Cloudflare Pages SPA Routing & Deep Linking Rules
-/stockflow/*    /stockflow/index.html    200
-/packing/*      /packing/index.html      200
-/*              /index.html              200
+/stockflow       /stockflow/              301!
+/stockflow/*     /stockflow/index.html    200
+/packing         /packing/                301!
+/packing/*       /packing/index.html      200
+/*               /index.html              200

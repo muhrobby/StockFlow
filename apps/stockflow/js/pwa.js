@@ -53,7 +53,13 @@ const PwaManager = {
             let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
               if (!refreshing) {
+                const lastReload = sessionStorage.getItem('pwa_sw_last_reload');
+                const now = Date.now();
+                if (lastReload && now - Number(lastReload) < 10000) {
+                  return;
+                }
                 refreshing = true;
+                sessionStorage.setItem('pwa_sw_last_reload', String(now));
                 console.log('[PWA] Cache baru aktif, memuat ulang antarmuka...');
                 window.location.reload();
               }
