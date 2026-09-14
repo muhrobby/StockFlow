@@ -275,7 +275,14 @@
       showError('Sesi login telah berakhir. Silakan login kembali.');
       return;
     }
-    if (!user.default_store_id) {
+    const effectiveStoreId = String(
+      (typeof window.Auth?.getActiveStore === 'function' && window.Auth.getActiveStore()) ||
+      (typeof localStorage !== 'undefined' && localStorage.getItem('active_store')) ||
+      user.default_store_id ||
+      ''
+    ).trim().toUpperCase();
+
+    if (!effectiveStoreId) {
       showError('Data store tidak ditemukan di sesi. Silakan login kembali.');
       return;
     }
@@ -290,7 +297,7 @@
     const payload = {
       mode,
       access_id: user.access_id,
-      store_id: String(user.default_store_id || '').trim().toUpperCase(),
+      store_id: effectiveStoreId,
       items: parsedRows
     };
 
@@ -353,13 +360,25 @@
     }
   }
 
+  function sanitizeCSVCell(val) {
+    const s = String(val ?? '');
+    if (/^[=+\-@\t\r]/.test(s)) {
+      return `'${s}`;
+    }
+    return s;
+  }
+
   function downloadFeedbackCSV(results) {
     if (!results || results.length === 0) return;
 
     const headers = ['sku', 'location', 'qty', 'status', 'feedback'];
     const rows = results.map(r => {
-      const escapedFeedback = `"${String(r.feedback || '').replace(/"/g, '""')}"`;
-      return `${r.sku},${r.location},${r.qty},${r.status},${escapedFeedback}`;
+      const escapedFeedback = `"${sanitizeCSVCell(r.feedback).replace(/"/g, '""')}"`;
+      const safeSku = sanitizeCSVCell(r.sku);
+      const safeLoc = sanitizeCSVCell(r.location);
+      const safeQty = sanitizeCSVCell(r.qty);
+      const safeStatus = sanitizeCSVCell(r.status);
+      return `${safeSku},${safeLoc},${safeQty},${safeStatus},${escapedFeedback}`;
     });
 
     const csvContent = [headers.join(','), ...rows].join('\n');

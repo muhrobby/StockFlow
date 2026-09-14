@@ -15,7 +15,8 @@
     "build:packing": "npm --workspace=apps/packing run build",
     "dev:packing": "npm --workspace=apps/packing run dev",
     "dev:stockflow": "npm --workspace=apps/stockflow run watch:css",
-    "dev:portal": "npm --workspace=apps/portal run watch:css"
+    "dev:portal": "npm --workspace=apps/portal run watch:css",
+    "pentest": "node scripts/security-audit-test.js"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.17",

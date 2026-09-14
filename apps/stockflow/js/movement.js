@@ -221,7 +221,12 @@ async function handleMovementSubmit(event) {
     AppState.user?.access_id ||
     document.getElementById('movementNik')?.value
   );
-  const store_id = String(AppState.user?.default_store_id || '').trim().toUpperCase();
+  const store_id = String(
+    (typeof window.Auth?.getActiveStore === 'function' && window.Auth.getActiveStore()) ||
+    (typeof localStorage !== 'undefined' && localStorage.getItem('active_store')) ||
+    AppState.user?.default_store_id ||
+    ''
+  ).trim().toUpperCase();
 
   const errors = [];
 

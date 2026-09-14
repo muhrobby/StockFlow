@@ -54,8 +54,15 @@ export async function login(accessId, apiUrl = DEFAULT_LOGIN_URL) {
     throw new Error(data.message || 'Login gagal. Akses ID tidak terdaftar atau non-aktif.');
   }
 
+  const sessionToken = String(
+    data.session_token ||
+    data.token ||
+    (data.user && (data.user.session_token || data.user.token)) ||
+    ''
+  ).trim();
+
   const normalizedUser = normalizeUser(data.user);
-  saveSession(normalizedUser);
+  saveSession(normalizedUser, sessionToken);
 
   // Set default active store if not set
   if (normalizedUser && normalizedUser.default_store_id) {
@@ -64,13 +71,22 @@ export async function login(accessId, apiUrl = DEFAULT_LOGIN_URL) {
 
   return {
     success: true,
-    user: normalizedUser
+    user: normalizedUser,
+    token: sessionToken
   };
 }
 
-export function saveSession(user, ttlMs = DEFAULT_SESSION_TTL_MS) {
+export function saveSession(user, token = '', ttlMs = DEFAULT_SESSION_TTL_MS) {
+  const sessionToken = String(
+    token ||
+    user?.session_token ||
+    user?.token ||
+    ''
+  ).trim();
+
   const session = {
     user: normalizeUser(user),
+    token: sessionToken,
     created_at: Date.now(),
     expires_at: Date.now() + ttlMs
   };
@@ -82,6 +98,11 @@ export function saveSession(user, ttlMs = DEFAULT_SESSION_TTL_MS) {
   }
 
   return session;
+}
+
+export function getToken() {
+  const session = getSession();
+  return session?.token || '';
 }
 
 export function getSession() {
@@ -157,6 +178,7 @@ export const SharedAuth = {
   login,
   saveSession,
   getSession,
+  getToken,
   clearSession,
   canAccessApp,
   getActiveStore,

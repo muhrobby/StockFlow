@@ -8,6 +8,9 @@ interface ContinuousCameraModalProps {
   onAddPhoto: (dataUrl: string) => void;
   currentCount: number;
   maxCount: number;
+  address?: string;
+  accessId?: string;
+  invNo?: string;
 }
 
 export const ContinuousCameraModal: React.FC<ContinuousCameraModalProps> = ({
@@ -16,6 +19,9 @@ export const ContinuousCameraModal: React.FC<ContinuousCameraModalProps> = ({
   onAddPhoto,
   currentCount,
   maxCount,
+  address,
+  accessId,
+  invNo,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -98,7 +104,8 @@ export const ContinuousCameraModal: React.FC<ContinuousCameraModalProps> = ({
     if (!ctx) return;
 
     ctx.drawImage(video, 0, 0, w, h);
-    // Kualitas JPEG 0.82 menghasilkan teks resi sangat jernih pada ukuran ~120-180 KB
+
+    // Kualitas JPEG 0.82 menghasilkan gambar sangat jernih dan hemat bandwidth (~120-180 KB)
     const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
 
     // Audio & Visual flash feedback
