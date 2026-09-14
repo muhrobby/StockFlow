@@ -38,12 +38,23 @@
   }
 
   function saveSession(
-    user
+    user,
+    token = ''
   ) {
+
+    const sessionToken =
+      token ||
+      user?.session_token ||
+      user?.token ||
+      '';
+
+    const normalized = normalizeUser(user);
 
     const session = {
 
-      user: normalizeUser(user),
+      user: normalized,
+
+      token: sessionToken,
 
       created_at:
         Date.now(),
@@ -59,6 +70,10 @@
       APP_CONFIG.SESSION_KEY,
       JSON.stringify(session)
     );
+
+    if (normalized?.default_store_id) {
+      setActiveStore(normalized.default_store_id);
+    }
 
 
     return session;
@@ -128,6 +143,38 @@
 
 
   /**
+   * Ambil token sesi aktif.
+   */
+  function getToken() {
+    const session = getSession();
+    return session?.token || '';
+  }
+
+  /**
+   * Ambil toko aktif (sinkron dengan portal).
+   */
+  function getActiveStore() {
+    try {
+      const saved = localStorage.getItem('active_store');
+      if (saved) return saved.trim().toUpperCase();
+    } catch (_) {}
+
+    const session = getSession();
+    return session?.user?.default_store_id || '';
+  }
+
+  /**
+   * Set toko aktif.
+   */
+  function setActiveStore(storeId) {
+    const clean = String(storeId || '').trim().toUpperCase();
+    try {
+      localStorage.setItem('active_store', clean);
+    } catch (_) {}
+    return clean;
+  }
+
+  /**
    * Logout.
    */
   function clearSession() {
@@ -143,6 +190,9 @@
     login,
     saveSession,
     getSession,
+    getToken,
+    getActiveStore,
+    setActiveStore,
     clearSession
   };
 

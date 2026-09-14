@@ -23,16 +23,14 @@ import { BarcodeScannerModal } from './components/BarcodeScannerModal';
 import { MediaPreviewList } from './components/MediaPreviewList';
 import { PackingHistoryView } from './components/PackingHistoryView';
 import {
-  SyncNotificationTray,
-  InFlightSyncItem,
-  RecentSyncItem
+  SyncNotificationTray
 } from './components/SyncNotificationTray';
 import {
-  submitPackingDocumentation,
   fetchStoreInfo,
-  PackingPayload,
   PackingHistoryItem
 } from './services/packingApi';
+import { packingQueueManager } from './services/packingQueueManager';
+import { QueuedPackingJob, cleanupSyncedJobs } from './services/packingQueueDb';
 
 const MAX_PHOTOS = 6;
 
@@ -47,20 +45,9 @@ export const App: React.FC = () => {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
 
-  // SYNC NOTIFICATION TRAY STATES
-  const [inFlightItems, setInFlightItems] = useState<InFlightSyncItem[]>([]);
-  const [recentSyncs, setRecentSyncs] = useState<RecentSyncItem[]>(() => {
-    try {
-      const store = getStoreCode();
-      const raw = localStorage.getItem(`packing_recent_syncs_${store}`);
-      return raw ? JSON.parse(raw) : [];
-    } catch (_) {
-      return [];
-    }
-  });
-
-  // RECENT PACKED LOGS (SESI AKTIF INI)
-  const [recentLogs, setRecentLogs] = useState<PackingHistoryItem[]>([]);
+  // PERSISTENT INDEXEDDB RESILIENT QUEUE STATES
+  const [jobs, setJobs] = useState<QueuedPackingJob[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -69,6 +56,12 @@ export const App: React.FC = () => {
   const hasAccess = checkPackingAccess();
 
   useEffect(() => {
+    // Inisialisasi Queue Manager & langganan perubahan antrean IndexedDB
+    packingQueueManager.init().then((initialJobs) => setJobs(initialJobs));
+    const unsubscribe = packingQueueManager.subscribe((updatedJobs) => {
+      setJobs(updatedJobs);
+    });
+
     // Refresh session on mount
     setSession(getCurrentSession());
 
@@ -87,6 +80,7 @@ export const App: React.FC = () => {
 
     return () => {
       isMounted = false;
+      unsubscribe();
     };
   }, [storeCode]);
 
@@ -137,6 +131,8 @@ export const App: React.FC = () => {
             const ctx = canvas.getContext('2d');
             if (ctx) {
               ctx.drawImage(img, 0, 0, w, h);
+
+              // Kualitas JPEG 0.82 menghasilkan gambar jernih dan hemat bandwidth (~120-180 KB)
               const compressed = canvas.toDataURL('image/jpeg', 0.82);
               handleAddPhoto(compressed);
             } else {
@@ -168,15 +164,9 @@ export const App: React.FC = () => {
     ).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}${sign}${diffHours}:${diffMinutes}`;
   };
 
-  const handleClearRecentSyncs = () => {
-    setRecentSyncs([]);
-    try {
-      localStorage.removeItem(`packing_recent_syncs_${storeCode}`);
-    } catch (_) {}
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     const cleanInv = invNo.trim().toUpperCase();
     if (!cleanInv) {
@@ -191,110 +181,46 @@ export const App: React.FC = () => {
       return;
     }
 
+    if (packingQueueManager.isInvoiceProcessing(cleanInv)) {
+      audio.error();
+      alert(`Nomor Resi / Invoice ${cleanInv} sedang dalam proses unggah ke server. Mohon tunggu sejenak.`);
+      return;
+    }
+
+    setIsSubmitting(true);
     const currentIsoTime = getLocalIsoTime();
     const currentPhotosCount = photos.length;
-    const inFlightId = `PACK-SYNC-${Date.now()}`;
+    const currentPhotos = [...photos];
 
-    const payload: PackingPayload = {
-      id: `PACK-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
-      store_id: storeCode,
-      store_code: storeCode,
-      inv_no: cleanInv,
-      timestamp: currentIsoTime,
-      time_created: currentIsoTime,
-      address: storeAddress,
-      access_id: session?.access_id || 'OPS-GUEST',
-      user_name: session?.nama || 'Petugas Packing',
-      total_photos: currentPhotosCount,
-      photos: photos.map((data, idx) => ({
-        filename: `${cleanInv}_foto_${idx + 1}.jpg`,
-        data,
-        timestamp: currentIsoTime
-      }))
-    };
-
-    // ZERO-WAIT OPTIMISTIC RESPONSE
+    // ZERO-WAIT OPTIMISTIC RESPONSE: Form seketika di-reset agar operator langsung proses paket berikutnya
     audio.success();
     setInvNo('');
     setPhotos([]);
 
-    // Tambahkan ke daftar sedang berjalan (in-flight)
-    setInFlightItems((prev) => [
-      {
-        id: inFlightId,
-        invNo: cleanInv,
-        totalPhotos: currentPhotosCount,
-        timestamp: currentIsoTime
-      },
-      ...prev
-    ]);
-
-    // Asynchronous background upload
     try {
-      const res = await submitPackingDocumentation(payload);
-
-      // Hapus dari in-flight
-      setInFlightItems((prev) => prev.filter((item) => item.id !== inFlightId));
-
-      const now = new Date();
-      const timeFormatted = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
-      // Catat di recent syncs
-      const syncItem: RecentSyncItem = {
-        id: res.drive_folder_url || inFlightId,
+      await packingQueueManager.enqueueJob({
+        id: `PACK-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+        storeId: storeCode,
+        storeCode: storeCode,
         invNo: cleanInv,
-        totalPhotos: currentPhotosCount,
         timestamp: currentIsoTime,
-        timeFormatted,
-        status: 'success'
-      };
-
-      setRecentSyncs((prev) => {
-        const updated = [syncItem, ...prev].slice(0, 15);
-        try {
-          localStorage.setItem(`packing_recent_syncs_${storeCode}`, JSON.stringify(updated));
-        } catch (_) {}
-        return updated;
-      });
-
-      // Tambahkan ke recent logs sesi ini secara instan
-      const newLogItem: PackingHistoryItem = {
-        store_id: storeCode,
-        inv_no: cleanInv,
+        timeCreated: currentIsoTime,
         address: storeAddress,
-        total_photos: currentPhotosCount,
-        link_google_drive: res.drive_folder_url || '',
-        access_id: session?.access_id || '-',
-        timestamp: currentIsoTime
-      };
-      setRecentLogs((prev) => [newLogItem, ...prev]);
-    } catch (err: any) {
-      console.error('[Packing] Background upload error:', err);
-      audio.error();
-
-      // Hapus dari in-flight
-      setInFlightItems((prev) => prev.filter((item) => item.id !== inFlightId));
-
-      const now = new Date();
-      const timeFormatted = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
-      const failedItem: RecentSyncItem = {
-        id: inFlightId,
-        invNo: cleanInv,
+        accessId: session?.access_id || 'OPS-GUEST',
+        userName: session?.nama || 'Petugas Packing',
         totalPhotos: currentPhotosCount,
-        timestamp: currentIsoTime,
-        timeFormatted,
-        status: 'error',
-        message: 'Gagal terhubung ke server'
-      };
-
-      setRecentSyncs((prev) => {
-        const updated = [failedItem, ...prev].slice(0, 15);
-        try {
-          localStorage.setItem(`packing_recent_syncs_${storeCode}`, JSON.stringify(updated));
-        } catch (_) {}
-        return updated;
+        photos: currentPhotos.map((data, idx) => ({
+          filename: `${cleanInv}_foto_${idx + 1}.jpg`,
+          data,
+          timestamp: currentIsoTime
+        }))
       });
+    } catch (err: any) {
+      console.error('[Packing] Gagal memasukkan dokumentasi ke antrean:', err);
+      audio.error();
+      alert(err?.message || 'Gagal menyimpan antrean dokumentasi packing.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -343,6 +269,19 @@ export const App: React.FC = () => {
     );
   }
 
+  // RECENT PACKED LOGS DARI INDEXEDDB (SYNCED JOBS)
+  const recentLogs: PackingHistoryItem[] = jobs
+    .filter((j) => j.status === 'synced')
+    .map((j) => ({
+      store_id: j.storeId,
+      inv_no: j.invNo,
+      address: j.address,
+      total_photos: j.totalPhotos,
+      link_google_drive: j.driveFolderUrl || '',
+      access_id: j.accessId,
+      timestamp: j.timestamp
+    }));
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col antialiased font-sans pb-28">
       {/* TOP APP HEADER (SERAGAM DENGAN STOCKFLOW & PORTAL) */}
@@ -384,11 +323,12 @@ export const App: React.FC = () => {
               {isAudioActive ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5 text-slate-400" />}
             </button>
 
-            {/* SYNC NOTIFICATION BELL & POPOVER */}
+            {/* SYNC NOTIFICATION BELL & POPOVER DENGAN RESILIENT RETRY ENGINE */}
             <SyncNotificationTray
-              inFlightItems={inFlightItems}
-              recentSyncs={recentSyncs}
-              onClearRecent={handleClearRecentSyncs}
+              jobs={jobs}
+              onRetry={(id) => packingQueueManager.retryJob(id)}
+              onRemove={(id) => packingQueueManager.removeJob(id)}
+              onClearSynced={() => cleanupSyncedJobs(0)}
             />
           </div>
         </div>
@@ -463,7 +403,7 @@ export const App: React.FC = () => {
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={photos.length === 0 || !invNo.trim()}
+                disabled={photos.length === 0 || !invNo.trim() || isSubmitting}
                 className="h-14 w-full rounded-2xl font-bold text-sm text-white shadow-lg shadow-red-200 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed bg-red-600 hover:bg-red-700"
               >
                 <UploadCloud className="w-5 h-5" />
@@ -519,6 +459,9 @@ export const App: React.FC = () => {
         onAddPhoto={handleAddPhoto}
         currentCount={photos.length}
         maxCount={MAX_PHOTOS}
+        address={storeAddress}
+        accessId={session?.access_id}
+        invNo={invNo}
       />
 
       {/* BARCODE SCANNER MODAL (SCAN RESI / INVOICE) */}

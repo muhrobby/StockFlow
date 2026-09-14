@@ -35,6 +35,7 @@ export interface PackingHistoryItem {
 const N8N_PACKING_URL = 'https://n8n-v2.humalab.my.id/webhook/warehouse/packing';
 const N8N_PACKING_SEARCH_URL = 'https://n8n-v2.humalab.my.id/webhook/warehouse/packing/search';
 const N8N_PACKING_STORE_INFO_URL = 'https://n8n-v2.humalab.my.id/webhook/warehouse/packing/store-info';
+const N8N_PACKING_STATUS_URL = 'https://n8n-v2.humalab.my.id/webhook/warehouse/packing/status';
 
 export interface StoreInfoResponse {
   success: boolean;
@@ -70,19 +71,79 @@ export async function fetchStoreInfo(storeId: string): Promise<StoreInfoResponse
   return data;
 }
 
+export interface PackingJobStatusResponse {
+  success: boolean;
+  job_id: string;
+  status: 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'NOT_FOUND' | string;
+  inv_no?: string;
+  store_id?: string;
+  total_photos?: number;
+  processed_photos?: number;
+  drive_folder_url?: string;
+  message?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export async function submitPackingDocumentation(
-  payload: PackingPayload
-): Promise<{ success: boolean; message: string; drive_folder_url?: string }> {
-  const res = await fetch(N8N_PACKING_URL, {
+  payload: PackingPayload,
+  timeoutMs = 60000
+): Promise<{ success: boolean; message: string; job_id?: string; status?: string; drive_folder_url?: string }> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(N8N_PACKING_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    if (!res.ok) {
+      if (res.status === 524 || res.status === 504) {
+        throw new Error(
+          'Server butuh waktu lebih lama (timeout). Foto tersimpan aman di antrean lokal; silakan klik "Coba Lagi".'
+        );
+      }
+      let msg = `Gagal mengirim dokumentasi ke server (HTTP ${res.status}).`;
+      try {
+        const err = await res.json();
+        msg = err.message || msg;
+      } catch (_) {}
+      throw new Error(msg);
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      throw new Error(
+        'Permintaan pengunggahan timeout. Foto tetap tersimpan aman di antrean lokal; silakan klik "Coba Lagi".'
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+export async function checkPackingJobStatus(jobId: string): Promise<PackingJobStatusResponse> {
+  const cleanJobId = String(jobId || '').trim();
+  const res = await fetch(N8N_PACKING_STATUS_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify({
+      job_id: cleanJobId
+    })
   });
 
   if (!res.ok) {
-    let msg = 'Gagal mengirim dokumentasi ke server. Silakan periksa koneksi.';
+    let msg = 'Gagal memeriksa status antrean packing.';
     try {
       const err = await res.json();
       msg = err.message || msg;

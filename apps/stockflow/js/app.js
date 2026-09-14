@@ -127,6 +127,14 @@ function bindEvents() {
     showToast("Koneksi online kembali. Menyinkronkan...");
     QueueManager.processQueue();
   });
+
+  window.addEventListener("hashchange", () => {
+    const hashPage = window.location.hash.replace(/^#/, "").trim();
+    const allowedPages = ["dashboard", "search", "movement", "stock-entry", "history"];
+    if (allowedPages.includes(hashPage) && hashPage !== AppState.currentPage) {
+      navigateTo(hashPage);
+    }
+  });
 }
 
 /* =========================================
@@ -141,7 +149,11 @@ function bootstrap() {
 
     showApp();
 
-    navigateTo("dashboard");
+    const allowedPages = ["dashboard", "search", "movement", "stock-entry", "history"];
+    const hashPage = window.location.hash.replace(/^#/, "").trim();
+    const targetPage = allowedPages.includes(hashPage) ? hashPage : "dashboard";
+
+    navigateTo(targetPage);
 
     return;
   }
@@ -188,7 +200,7 @@ async function handleLogin(event) {
       throw new Error("Data user tidak ditemukan.");
     }
 
-    Auth.saveSession(result.user);
+    Auth.saveSession(result.user, result.session_token || result.token);
 
     AppState.user = result.user;
 
@@ -607,6 +619,11 @@ function navigateTo(page) {
   }
 
   AppState.currentPage = page;
+
+  // Sinkronkan URL hash tanpa memicu reload
+  if (window.location.hash !== `#${page}`) {
+    history.replaceState(null, "", `#${page}`);
+  }
 
   const dashboardPage = document.getElementById("dashboardPage");
   const searchPage = document.getElementById("searchPage");

@@ -26,6 +26,27 @@
     return document.getElementById(id);
   }
 
+  function escapeHtml(value) {
+    if (typeof window.escapeHtml === 'function') {
+      return window.escapeHtml(value);
+    }
+    return String(value ?? '')
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function getEffectiveStoreId(user) {
+    return (
+      (typeof window.Auth?.getActiveStore === 'function' && window.Auth.getActiveStore()) ||
+      (typeof localStorage !== 'undefined' && localStorage.getItem('active_store')) ||
+      user?.default_store_id ||
+      ''
+    ).trim().toUpperCase();
+  }
+
   /* =========================================
      INITIALIZATION & EVENT BINDING
   ========================================= */
@@ -114,10 +135,10 @@
   ========================================= */
 
   async function loadStoreLocations() {
-    const user = AppState.user;
-    if (!user || !user.default_store_id) return;
+    const user = AppState.user || window.Auth?.getSession()?.user;
+    const storeId = getEffectiveStoreId(user);
+    if (!user || !storeId) return;
 
-    const storeId = user.default_store_id;
     const cacheKey = `stockflow_locs_${storeId}`;
 
     // Cek cache memori/session
@@ -246,13 +267,13 @@
         <button
           type="button"
           class="w-full text-left px-3.5 py-2.5 hover:bg-slate-100 flex items-center justify-between transition border-b border-slate-100 last:border-0"
-          data-location="${loc.location_code}"
+          data-location="${escapeHtml(loc.location_code)}"
         >
           <div class="flex items-center gap-2">
-            <span class="font-bold text-slate-900">${loc.location_code}</span>
-            ${loc.zone ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">Zona ${loc.zone}</span>` : ""}
+            <span class="font-bold text-slate-900">${escapeHtml(loc.location_code)}</span>
+            ${loc.zone ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">Zona ${escapeHtml(loc.zone)}</span>` : ""}
           </div>
-          <span class="text-[11px] text-slate-400">${loc.section ? "Seksi " + loc.section : ""}</span>
+          <span class="text-[11px] text-slate-400">${loc.section ? "Seksi " + escapeHtml(loc.section) : ""}</span>
         </button>
       `
       )
@@ -466,8 +487,8 @@
   async function lookupSkuMaster(sku, autoFocusQty = false) {
     if (!sku || StockEntryState.isSearchingSku) return;
 
-    const user = AppState.user;
-    const storeId = user?.default_store_id || "";
+    const user = AppState.user || window.Auth?.getSession()?.user;
+    const storeId = getEffectiveStoreId(user);
 
     setSkuSearchingState(true);
 
@@ -806,10 +827,10 @@
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-1.5">
-                    <span class="font-mono text-sm font-black text-slate-900">${item.sku}</span>
+                    <span class="font-mono text-sm font-black text-slate-900">${escapeHtml(item.sku)}</span>
                     ${badgeHtml}
                   </div>
-                  <h4 class="mt-1 text-xs font-semibold text-slate-600 line-clamp-2">${item.description || "-"}</h4>
+                  <h4 class="mt-1 text-xs font-semibold text-slate-600 line-clamp-2">${escapeHtml(item.description || "-")}</h4>
                 </div>
                 <button
                   type="button"
@@ -871,8 +892,8 @@
           return `
           <tr class="border-b border-slate-100 hover:bg-slate-50/60 transition">
             <td class="py-3 px-3">
-              <div class="font-bold text-slate-900 text-sm">${item.sku}</div>
-              <div class="text-xs text-slate-500 truncate max-w-[180px] sm:max-w-[260px]">${item.description}</div>
+              <div class="font-bold text-slate-900 text-sm">${escapeHtml(item.sku)}</div>
+              <div class="text-xs text-slate-500 truncate max-w-[180px] sm:max-w-[260px]">${escapeHtml(item.description || "-")}</div>
             </td>
             <td class="py-3 px-3 text-center text-xs font-semibold text-slate-500">
               ${isSet ? item.oldStock : "-"}
@@ -1012,7 +1033,7 @@
     }
 
     const locCode = StockEntryState.lockedLocation;
-    const storeId = user.default_store_id;
+    const storeId = getEffectiveStoreId(user);
     const mode = StockEntryState.mode;
     const totalSkus = items.length;
     const totalPcs = items.reduce((sum, item) => sum + item.qty, 0);
