@@ -29,28 +29,46 @@ function getSearchCacheKey(sku) {
    INIT
 ========================================= */
 
-document.addEventListener("DOMContentLoaded", initApp);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
 
 function initApp() {
-  lucide.createIcons();
+  try {
+    if (window.lucide) {
+      lucide.createIcons();
+    }
 
-  Scanner.init();
+    Scanner.init();
 
-  QueueManager.init();
+    QueueManager.init();
 
-  SyncTracker.init();
+    SyncTracker.init();
 
-  if (window.AudioFeedback) {
-    window.AudioFeedback.updateToggleUI();
+    if (window.AudioFeedback) {
+      window.AudioFeedback.updateToggleUI();
+    }
+
+    if (window.PwaManager) {
+      window.PwaManager.init();
+    }
+
+    bindEvents();
+
+    bootstrap();
+  } catch (error) {
+    console.error("[StockFlow] Gagal menginisialisasi aplikasi:", error);
+    const boot = document.getElementById("bootPage");
+    if (boot) {
+      boot.classList.add("hidden");
+    }
+    showLogin();
+    if (typeof showToast === "function") {
+      showToast("Terjadi kendala saat memuat data. Silakan coba lagi.", "error");
+    }
   }
-
-  if (window.PwaManager) {
-    window.PwaManager.init();
-  }
-
-  bindEvents();
-
-  bootstrap();
 }
 
 /* =========================================
