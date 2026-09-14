@@ -7,39 +7,29 @@ import {
   AlertCircle,
   Loader2,
   Clock,
-  Camera
+  Camera,
+  RotateCcw,
+  ExternalLink,
+  Trash2
 } from 'lucide-react';
-
-export interface InFlightSyncItem {
-  id: string;
-  invNo: string;
-  totalPhotos: number;
-  timestamp: string;
-}
-
-export interface RecentSyncItem {
-  id: string;
-  invNo: string;
-  totalPhotos: number;
-  timestamp: string;
-  timeFormatted: string;
-  status: 'success' | 'error';
-  message?: string;
-}
+import { QueuedPackingJob } from '../services/packingQueueDb';
 
 interface SyncNotificationTrayProps {
-  inFlightItems: InFlightSyncItem[];
-  recentSyncs: RecentSyncItem[];
-  onClearRecent: () => void;
+  jobs: QueuedPackingJob[];
+  onRetry: (id: string) => Promise<void>;
+  onRemove: (id: string) => Promise<void>;
+  onClearSynced: () => void;
 }
 
 export const SyncNotificationTray: React.FC<SyncNotificationTrayProps> = ({
-  inFlightItems,
-  recentSyncs,
-  onClearRecent
+  jobs,
+  onRetry,
+  onRemove,
+  onClearSynced
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -79,11 +69,43 @@ export const SyncNotificationTray: React.FC<SyncNotificationTrayProps> = ({
     };
   }, [isOpen]);
 
-  const totalPending = inFlightItems.length;
+  const inFlightJobs = jobs.filter((j) => j.status === 'uploading' || j.status === 'pending');
+  const failedJobs = jobs.filter((j) => j.status === 'error');
+  const syncedJobs = jobs.filter((j) => j.status === 'synced').slice(0, 10);
+
+  const totalPending = inFlightJobs.length;
+  const totalFailed = failedJobs.length;
+  const totalAttention = totalPending + totalFailed;
+
+  const handleRetryClick = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRetryingId(id);
+    try {
+      await onRetry(id);
+    } finally {
+      setRetryingId(null);
+    }
+  };
+
+  const handleRemoveClick = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('Hapus antrean dokumentasi ini dari memori lokal?')) {
+      await onRemove(id);
+    }
+  };
+
+  const formatTime = (ts: number | string) => {
+    try {
+      const d = typeof ts === 'number' ? new Date(ts) : new Date(ts);
+      return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    } catch (_) {
+      return '';
+    }
+  };
 
   return (
     <div className="relative" ref={popoverRef}>
-      {/* TRIGGER BUTTON (LONCENG) */}
+      {/* TRIGGER BUTTON (LONCENG DENGAN BADGE STATUS) */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -92,15 +114,17 @@ export const SyncNotificationTray: React.FC<SyncNotificationTrayProps> = ({
         title="Pusat Sinkronisasi & Antrean"
       >
         <Bell className="h-5 w-5" />
-        {totalPending > 0 && (
+        {totalAttention > 0 && (
           <span
             className={`absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-black text-white shadow-sm ring-2 ring-white ${
-              !isOnline
+              totalFailed > 0
+                ? 'bg-red-600'
+                : !isOnline
                 ? 'bg-amber-500'
                 : 'bg-blue-600 animate-pulse'
             }`}
           >
-            {totalPending}
+            {totalAttention}
           </span>
         )}
       </button>
@@ -126,7 +150,7 @@ export const SyncNotificationTray: React.FC<SyncNotificationTrayProps> = ({
                   Notifikasi & Antrean
                 </h3>
                 <p className="text-[10px] font-medium text-slate-400 leading-tight">
-                  Status sinkronisasi cloud
+                  Status sinkronisasi & resiliensi lokal
                 </p>
               </div>
             </div>
@@ -142,21 +166,95 @@ export const SyncNotificationTray: React.FC<SyncNotificationTrayProps> = ({
 
           {/* KONTEN SCROLLABLE */}
           <div className="max-h-[60vh] space-y-4 overflow-y-auto p-4 text-xs">
-            {/* SECTION 1: SEDANG BERJALAN */}
-            {inFlightItems.length > 0 && (
+            {/* SECTION 1: GAGAL / PERLU RETRY (PRIORITAS UTAMA DITAMPILKAN DI ATAS) */}
+            {failedJobs.length > 0 && (
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                      Sedang Berjalan
+                    <span className="text-[10px] font-black uppercase tracking-wider text-red-600">
+                      Gagal Diunggah ({failedJobs.length})
                     </span>
-                    <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-black text-blue-800">
-                      {inFlightItems.length}
+                  </div>
+                  <span className="text-[10px] font-medium text-slate-400">
+                    Foto tersimpan aman
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {failedJobs.map((item) => {
+                    const isItemRetrying = retryingId === item.id;
+                    return (
+                      <div
+                        key={item.id}
+                        className="rounded-2xl border border-red-200 bg-red-50/70 p-3 transition-all"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-2.5 min-w-0">
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-600 text-white mt-0.5">
+                              <AlertCircle className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-slate-900 truncate">
+                                {item.invNo}
+                              </p>
+                              <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
+                                <Camera className="h-3 w-3 text-slate-400" />
+                                <span>{item.totalPhotos} Foto tersimpan</span>
+                                <span>•</span>
+                                <span>{formatTime(item.createdAt)}</span>
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => handleRemoveClick(item.id, e)}
+                            className="text-slate-400 hover:text-red-600 p-1 transition"
+                            title="Hapus dari antrean"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+
+                        {item.errorMessage && (
+                          <div className="mt-2 rounded-lg bg-red-100/70 px-2.5 py-1 text-[10px] font-medium text-red-800 leading-tight">
+                            {item.errorMessage}
+                          </div>
+                        )}
+
+                        {/* TOMBOL COBA LAGI (RETRY) */}
+                        <div className="mt-2.5 pt-2 border-t border-red-200/60 flex items-center justify-between">
+                          <span className="text-[10px] text-red-600 font-semibold">
+                            {item.retryCount > 0 ? `Sudah coba ${item.retryCount}x` : 'Belum berhasil'}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={isItemRetrying}
+                            onClick={(e) => handleRetryClick(item.id, e)}
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-3 py-1.5 text-[11px] font-bold text-white shadow-sm shadow-red-200 hover:bg-red-700 active:scale-95 disabled:bg-slate-300 transition-all"
+                          >
+                            <RotateCcw className={`h-3 w-3 ${isItemRetrying ? 'animate-spin' : ''}`} />
+                            <span>{isItemRetrying ? 'Mencoba...' : 'Coba Lagi'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* SECTION 2: SEDANG BERJALAN (IN-FLIGHT) */}
+            {inFlightJobs.length > 0 && (
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600">
+                      Sedang Diunggah ({inFlightJobs.length})
                     </span>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  {inFlightItems.map((item) => (
+                  {inFlightJobs.map((item) => (
                     <div
                       key={item.id}
                       className="flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 p-2.5"
@@ -171,7 +269,7 @@ export const SyncNotificationTray: React.FC<SyncNotificationTrayProps> = ({
                           </p>
                           <p className="text-[10px] text-slate-500 flex items-center gap-1">
                             <Camera className="h-3 w-3 text-slate-400" />
-                            <span>{item.totalPhotos} Foto • Mengunggah...</span>
+                            <span>{item.totalPhotos} Foto • Mengunggah ke Drive...</span>
                           </p>
                         </div>
                       </div>
@@ -184,8 +282,8 @@ export const SyncNotificationTray: React.FC<SyncNotificationTrayProps> = ({
               </div>
             )}
 
-            {/* SECTION 2: BARU SAJA SUKSES / RIWAYAT */}
-            {recentSyncs.length > 0 && (
+            {/* SECTION 3: BARU SAJA SELESAI (SYNCED) */}
+            {syncedJobs.length > 0 && (
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
@@ -193,57 +291,61 @@ export const SyncNotificationTray: React.FC<SyncNotificationTrayProps> = ({
                   </span>
                   <button
                     type="button"
-                    onClick={onClearRecent}
+                    onClick={onClearSynced}
                     className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 active:underline"
                   >
                     Bersihkan
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {recentSyncs.map((item) => (
+                  {syncedJobs.map((item) => (
                     <div
                       key={item.id}
-                      className={`flex items-center justify-between rounded-xl border p-2.5 ${
-                        item.status === 'success'
-                          ? 'border-emerald-100 bg-emerald-50/40'
-                          : 'border-red-100 bg-red-50/40'
-                      }`}
+                      className="flex items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50/40 p-2.5"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div
-                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white ${
-                            item.status === 'success'
-                              ? 'bg-emerald-600'
-                              : 'bg-red-600'
-                          }`}
-                        >
-                          {item.status === 'success' ? (
-                            <CheckCircle2 className="h-4 w-4" />
-                          ) : (
-                            <AlertCircle className="h-4 w-4" />
-                          )}
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white">
+                          <CheckCircle2 className="h-4 w-4" />
                         </div>
                         <div className="min-w-0">
                           <p className="font-bold text-slate-800 truncate">
                             {item.invNo}
                           </p>
-                          <p className="text-[10px] text-slate-500 flex items-center gap-1">
+                          <p className="text-[10px] text-slate-500 flex items-center gap-1 flex-wrap">
                             <Clock className="h-3 w-3 text-slate-400 shrink-0" />
-                            <span>{item.timeFormatted}</span>
+                            <span>{formatTime(item.updatedAt || item.createdAt)}</span>
                             <span>•</span>
                             <span>{item.totalPhotos} Foto</span>
+                            {item.serverStatus === 'PROCESSING' && (
+                              <span className="text-amber-600 font-semibold">
+                                • Memproses stempel...
+                              </span>
+                            )}
+                            {item.serverStatus === 'COMPLETED' && (
+                              <span className="text-emerald-700 font-semibold">
+                                • Berstempel Resmi
+                              </span>
+                            )}
                           </p>
                         </div>
                       </div>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0 ml-2 ${
-                          item.status === 'success'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {item.status === 'success' ? 'Sukses' : 'Gagal'}
-                      </span>
+
+                      {item.driveFolderUrl ? (
+                        <a
+                          href={item.driveFolderUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-800 hover:bg-emerald-200 shrink-0 ml-2 transition"
+                          title="Buka Folder di Google Drive"
+                        >
+                          <span>Drive</span>
+                          <ExternalLink className="h-2.5 w-2.5" />
+                        </a>
+                      ) : (
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 shrink-0 ml-2">
+                          Sukses
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -251,7 +353,7 @@ export const SyncNotificationTray: React.FC<SyncNotificationTrayProps> = ({
             )}
 
             {/* EMPTY STATE */}
-            {inFlightItems.length === 0 && recentSyncs.length === 0 && (
+            {inFlightJobs.length === 0 && failedJobs.length === 0 && syncedJobs.length === 0 && (
               <div className="py-6 text-center">
                 <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
                   <CheckCheck className="h-5 w-5" />
@@ -260,7 +362,7 @@ export const SyncNotificationTray: React.FC<SyncNotificationTrayProps> = ({
                   Semua Data Tersinkron
                 </h4>
                 <p className="mx-auto mt-0.5 text-[11px] text-slate-400 leading-relaxed max-w-[220px]">
-                  Tidak ada antrean tertunda. Dokumentasi packing aman di cloud.
+                  Tidak ada antrean tertunda. Dokumentasi packing aman di cloud dan IndexedDB.
                 </p>
               </div>
             )}
@@ -279,11 +381,11 @@ export const SyncNotificationTray: React.FC<SyncNotificationTrayProps> = ({
                   isOnline ? 'text-slate-600' : 'text-amber-600'
                 }`}
               >
-                {isOnline ? 'Online (Terhubung)' : 'Offline (Terputus)'}
+                {isOnline ? 'Online (Terhubung)' : 'Offline (Tersimpan Lokal)'}
               </span>
             </div>
             <span className="text-slate-400 font-medium">
-              Digital Operations Cloud
+              StockFlow Resilient Queue
             </span>
           </div>
         </div>

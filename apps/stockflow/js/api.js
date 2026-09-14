@@ -22,6 +22,9 @@
 
     try {
 
+      const token = window.Auth?.getToken?.() || '';
+      const authHeader = token ? { 'Authorization': `Bearer ${token}` } : {};
+
       const response =
         await fetch(
           `${APP_CONFIG.API_BASE_URL}${path}`,
@@ -31,6 +34,8 @@
             headers: {
               'Content-Type':
                 'application/json',
+
+              ...authHeader,
 
               ...(options.headers || {})
             },
@@ -67,6 +72,17 @@
 
 
       if (!response.ok) {
+
+        if (response.status === 401) {
+          window.Auth?.clearSession?.();
+          if (typeof window.showToast === 'function') {
+            window.showToast('Sesi login Anda telah berakhir. Mengalihkan ke Portal Utama...', 'error');
+          }
+          setTimeout(() => {
+            window.location.replace('/');
+          }, 1200);
+          throw new Error(data?.message || 'Sesi Anda telah berakhir (HTTP 401). Silakan login kembali melalui Portal Utama.');
+        }
 
         throw new Error(
           data?.message ||

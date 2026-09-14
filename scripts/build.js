@@ -86,10 +86,13 @@ try {
   process.exit(1);
 }
 
-// 6. Salin aturan redirect Cloudflare Pages (_redirects)
-console.log('📋 Menyalin _redirects ke dist/...');
+// 6. Salin aturan redirect & security headers Cloudflare Pages (_redirects & _headers)
+console.log('📋 Menyalin _redirects dan _headers ke dist/...');
 if (fs.existsSync(path.join(ROOT_DIR, '_redirects'))) {
   fs.copyFileSync(path.join(ROOT_DIR, '_redirects'), path.join(DIST_DIR, '_redirects'));
+}
+if (fs.existsSync(path.join(ROOT_DIR, '_headers'))) {
+  fs.copyFileSync(path.join(ROOT_DIR, '_headers'), path.join(DIST_DIR, '_headers'));
 }
 
 console.log('🎉 [Selesai] Seluruh modul monorepo siap dideploy ke Cloudflare Pages!');
