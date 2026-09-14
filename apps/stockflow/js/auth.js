@@ -31,9 +31,15 @@
     if (!user || typeof user !== 'object') return user;
     return {
       ...user,
+      access_id: String(user.access_id || user.nik || '').trim(),
+      nik: String(user.access_id || user.nik || '').trim(),
+      nama: String(user.nama || user.name || '').trim(),
       role: String(user.role || 'USER').trim().toUpperCase(),
       default_store_id: String(user.default_store_id || '').trim().toUpperCase(),
-      allowed_stores: String(user.allowed_stores || '').trim().toUpperCase()
+      allowed_stores: String(user.allowed_stores || '').trim().toUpperCase(),
+      enabled_apps: String(user.enabled_apps || 'stockflow,packing').trim().toLowerCase(),
+      store_name: String(user.store_name || '').trim(),
+      store_address: String(user.store_address || user.address || '').trim()
     };
   }
 
@@ -175,6 +181,22 @@
   }
 
   /**
+   * Cek izin akses aplikasi (misal: 'stockflow')
+   */
+  function canAccessApp(appName = 'stockflow') {
+    const session = getSession();
+    if (!session || !session.user) return false;
+    const user = session.user;
+    if (user.role === 'SUPER_ADMIN') return true;
+
+    const allowedApps = (user.enabled_apps || '')
+      .split(',')
+      .map(s => s.trim().toLowerCase());
+
+    return allowedApps.includes(appName.toLowerCase()) || allowedApps.includes('*');
+  }
+
+  /**
    * Logout.
    */
   function clearSession() {
@@ -191,6 +213,7 @@
     saveSession,
     getSession,
     getToken,
+    canAccessApp,
     getActiveStore,
     setActiveStore,
     clearSession

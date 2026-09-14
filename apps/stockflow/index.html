@@ -46,61 +46,40 @@
 
     <section
       id="loginPage"
-      class="hidden min-h-screen items-center justify-center p-5"
+      class="hidden min-h-screen items-center justify-center p-5 font-sans"
     >
       <div class="w-full max-w-sm">
-        <div class="mb-8 text-center">
-          <div
-            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-red-600 text-white shadow-lg shadow-red-200"
-          >
-            <i data-lucide="package-search" class="h-8 w-8"></i>
+        <!-- Card 1: Sesi Belum Aktif (No Session / Expired) -->
+        <div id="guardNoSession" class="rounded-3xl bg-white p-8 text-center shadow-lg ring-1 ring-slate-200">
+          <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 ring-1 ring-amber-100">
+            <i data-lucide="shield-alert" class="h-7 w-7"></i>
           </div>
-          <h1 class="text-2xl font-black">StockFlow</h1>
-          <p class="mt-2 text-sm text-slate-500">
-            Masukkan Access ID untuk melanjutkan
+          <h2 class="text-lg font-bold text-slate-900">Sesi Belum Aktif</h2>
+          <p class="mt-1 mb-6 text-xs text-slate-500">
+            Silakan masuk melalui Portal Operasional untuk menggunakan modul StockFlow.
           </p>
-        </div>
-        <form
-          id="loginForm"
-          class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
-        >
-          <label for="nikInput" class="mb-2 block text-sm font-semibold"
-            >Access ID</label
-          >
-          <div class="relative">
-            <i
-              data-lucide="contact-round"
-              class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
-            ></i>
-            <input
-              id="nikInput"
-              type="text"
-              inputmode="numeric"
-              autocomplete="off"
-              placeholder="Masukkan Access ID"
-              class="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-lg font-bold outline-none transition focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-100 placeholder:text-sm placeholder:normal-case placeholder:font-normal placeholder:text-slate-400"
-            />
-          </div>
-          <div
-            id="loginError"
-            class="mt-3 hidden rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
-          ></div>
-          <button
-            id="loginButton"
-            type="submit"
-            class="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-red-600 font-bold text-white transition hover:bg-red-700 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <span>Masuk</span><i data-lucide="arrow-right" class="h-5 w-5"></i>
-          </button>
-        </form>
-
-        <div class="mt-4 text-center">
           <a
-            href="../"
-            class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-700 transition"
+            href="/"
+            class="flex h-12 w-full items-center justify-center rounded-2xl bg-red-600 font-bold text-xs text-white shadow-md shadow-red-200 transition-all hover:bg-red-700 active:scale-[0.98]"
           >
-            <i data-lucide="arrow-left" class="h-3.5 w-3.5"></i>
-            <span>Buka Portal Utama</span>
+            Buka Portal Utama
+          </a>
+        </div>
+
+        <!-- Card 2: Akses Dibatasi (Forbidden) -->
+        <div id="guardForbidden" class="hidden rounded-3xl bg-white p-8 text-center shadow-lg ring-1 ring-slate-200">
+          <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-600 ring-1 ring-red-100">
+            <i data-lucide="shield-alert" class="h-7 w-7"></i>
+          </div>
+          <h2 class="text-lg font-bold text-slate-900">Akses Dibatasi</h2>
+          <p class="mt-1 mb-6 text-xs text-slate-500">
+            Akun Anda (<span id="guardUserAccessId" class="font-bold text-slate-700">-</span>) tidak memiliki izin untuk modul StockFlow.
+          </p>
+          <a
+            href="/"
+            class="flex h-12 w-full items-center justify-center rounded-2xl bg-slate-800 font-bold text-xs text-white transition-all hover:bg-slate-900 active:scale-[0.98]"
+          >
+            Kembali ke Portal
           </a>
         </div>
 
@@ -1924,13 +1903,13 @@
     <!-- <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script> -->
     <script src="./js/config.js?v=4"></script>
     <script src="./js/api.js?v=4"></script>
-    <script src="./js/auth.js?v=4"></script>
+    <script src="./js/auth.js?v=5"></script>
     <script src="./js/audio.js?v=2"></script>
     <script src="./js/scanner.js?v=5"></script>
     <script src="./js/pwa.js?v=1"></script>
     <script src="./js/stock-entry.js?v=2"></script>
     <script src="./js/movement.js?v=7"></script>
     <script src="./js/bulk-upload.js?v=1"></script>
-    <script src="./js/app.js?v=19"></script>
+    <script src="./js/app.js?v=20"></script>
   </body>
 </html>

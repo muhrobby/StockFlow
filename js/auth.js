@@ -31,19 +31,36 @@
     if (!user || typeof user !== 'object') return user;
     return {
       ...user,
+      access_id: String(user.access_id || user.nik || '').trim(),
+      nik: String(user.access_id || user.nik || '').trim(),
+      nama: String(user.nama || user.name || '').trim(),
       role: String(user.role || 'USER').trim().toUpperCase(),
       default_store_id: String(user.default_store_id || '').trim().toUpperCase(),
-      allowed_stores: String(user.allowed_stores || '').trim().toUpperCase()
+      allowed_stores: String(user.allowed_stores || '').trim().toUpperCase(),
+      enabled_apps: String(user.enabled_apps || 'stockflow,packing').trim().toLowerCase(),
+      store_name: String(user.store_name || '').trim(),
+      store_address: String(user.store_address || user.address || '').trim()
     };
   }
 
   function saveSession(
-    user
+    user,
+    token = ''
   ) {
+
+    const sessionToken =
+      token ||
+      user?.session_token ||
+      user?.token ||
+      '';
+
+    const normalized = normalizeUser(user);
 
     const session = {
 
-      user: normalizeUser(user),
+      user: normalized,
+
+      token: sessionToken,
 
       created_at:
         Date.now(),
@@ -59,6 +76,10 @@
       APP_CONFIG.SESSION_KEY,
       JSON.stringify(session)
     );
+
+    if (normalized?.default_store_id) {
+      setActiveStore(normalized.default_store_id);
+    }
 
 
     return session;
@@ -128,6 +149,54 @@
 
 
   /**
+   * Ambil token sesi aktif.
+   */
+  function getToken() {
+    const session = getSession();
+    return session?.token || '';
+  }
+
+  /**
+   * Ambil toko aktif (sinkron dengan portal).
+   */
+  function getActiveStore() {
+    try {
+      const saved = localStorage.getItem('active_store');
+      if (saved) return saved.trim().toUpperCase();
+    } catch (_) {}
+
+    const session = getSession();
+    return session?.user?.default_store_id || '';
+  }
+
+  /**
+   * Set toko aktif.
+   */
+  function setActiveStore(storeId) {
+    const clean = String(storeId || '').trim().toUpperCase();
+    try {
+      localStorage.setItem('active_store', clean);
+    } catch (_) {}
+    return clean;
+  }
+
+  /**
+   * Cek izin akses aplikasi (misal: 'stockflow')
+   */
+  function canAccessApp(appName = 'stockflow') {
+    const session = getSession();
+    if (!session || !session.user) return false;
+    const user = session.user;
+    if (user.role === 'SUPER_ADMIN') return true;
+
+    const allowedApps = (user.enabled_apps || '')
+      .split(',')
+      .map(s => s.trim().toLowerCase());
+
+    return allowedApps.includes(appName.toLowerCase()) || allowedApps.includes('*');
+  }
+
+  /**
    * Logout.
    */
   function clearSession() {
@@ -143,6 +212,10 @@
     login,
     saveSession,
     getSession,
+    getToken,
+    canAccessApp,
+    getActiveStore,
+    setActiveStore,
     clearSession
   };
 
