@@ -32,28 +32,38 @@ function getSearchCacheKey(sku) {
 function initApp() {
   try {
     if (window.lucide) {
-      lucide.createIcons();
+      try { lucide.createIcons(); } catch (_) {}
     }
 
-    Scanner.init();
-
-    QueueManager.init();
-
-    SyncTracker.init();
-
-    if (window.AudioFeedback) {
-      window.AudioFeedback.updateToggleUI();
+    if (window.Scanner?.init) {
+      try { Scanner.init(); } catch (e) { console.warn('[Init] Scanner init warning:', e); }
     }
 
-    if (window.PwaManager) {
-      window.PwaManager.init();
+    if (window.QueueManager?.init) {
+      try { QueueManager.init(); } catch (e) { console.warn('[Init] QueueManager init warning:', e); }
     }
 
-    if (window.StockEntry) {
-      window.StockEntry.init();
+    if (window.SyncTracker?.init) {
+      try { SyncTracker.init(); } catch (e) { console.warn('[Init] SyncTracker init warning:', e); }
     }
 
-    bindEvents();
+    if (window.AudioFeedback?.updateToggleUI) {
+      try { window.AudioFeedback.updateToggleUI(); } catch (_) {}
+    }
+
+    if (window.PwaManager?.init) {
+      try { window.PwaManager.init(); } catch (_) {}
+    }
+
+    if (window.StockEntry?.init) {
+      try { window.StockEntry.init(); } catch (e) { console.warn('[Init] StockEntry init warning:', e); }
+    }
+
+    try {
+      bindEvents();
+    } catch (e) {
+      console.warn('[Init] bindEvents warning:', e);
+    }
 
     bootstrap();
   } catch (error) {
@@ -63,9 +73,6 @@ function initApp() {
       boot.classList.add("hidden");
     }
     showLogin();
-    if (typeof showToast === "function") {
-      showToast("Terjadi kendala saat memuat data. Silakan coba lagi.", "error");
-    }
   }
 }
 
@@ -79,21 +86,25 @@ function bindEvents() {
     loginForm.addEventListener("submit", handleLogin);
   }
 
-  document
-    .getElementById("searchForm")
-    .addEventListener("submit", handleSearch);
+  const searchForm = document.getElementById("searchForm");
+  if (searchForm) {
+    searchForm.addEventListener("submit", handleSearch);
+  }
 
-  document
-    .getElementById("scanCameraButton")
-    .addEventListener("click", handleOpenScanner);
+  const scanCameraButton = document.getElementById("scanCameraButton");
+  if (scanCameraButton) {
+    scanCameraButton.addEventListener("click", handleOpenScanner);
+  }
 
-  document
-    .getElementById("desktopLogoutButton")
-    .addEventListener("click", logout);
+  const desktopLogoutButton = document.getElementById("desktopLogoutButton");
+  if (desktopLogoutButton) {
+    desktopLogoutButton.addEventListener("click", logout);
+  }
 
-  document
-    .getElementById("mobileLogoutButton")
-    .addEventListener("click", logout);
+  const mobileLogoutButton = document.getElementById("mobileLogoutButton");
+  if (mobileLogoutButton) {
+    mobileLogoutButton.addEventListener("click", logout);
+  }
 
   // Audio Beep Feedback Toggle
   const btnToggleAudio = document.getElementById("btnToggleAudio");
@@ -777,6 +788,11 @@ function setLoginLoading(loading) {
 ========================================= */
 
 function showAuthGuard(state = "no_session", user = null) {
+  const bootPage = document.getElementById("bootPage");
+  if (bootPage) {
+    bootPage.classList.add("hidden");
+  }
+
   const appPage = document.getElementById("appPage");
   if (appPage) {
     appPage.classList.add("hidden");
@@ -804,20 +820,22 @@ function showAuthGuard(state = "no_session", user = null) {
     if (guardForbidden) guardForbidden.classList.add("hidden");
   }
 
-  if (typeof SyncTracker !== "undefined") {
-    SyncTracker.reset();
-  }
-  if (typeof QueueManager !== "undefined") {
-    QueueManager.updateBanner();
-  }
+  try {
+    if (typeof SyncTracker !== "undefined" && SyncTracker.reset) {
+      SyncTracker.reset();
+    }
+  } catch (_) {}
 
-  const bootPage = document.getElementById("bootPage");
-  if (bootPage) {
-    bootPage.classList.add("hidden");
-  }
+  try {
+    if (typeof QueueManager !== "undefined" && QueueManager.updateBanner) {
+      QueueManager.updateBanner();
+    }
+  } catch (_) {}
 
   if (window.lucide) {
-    lucide.createIcons();
+    try {
+      lucide.createIcons();
+    } catch (_) {}
   }
 }
 
